@@ -73,13 +73,14 @@ public class Main {
             e.printStackTrace();
         }
         JComboBox ips = new JComboBox(ipStr);
-        final JComponent[] comps = {roles, ips};
+        JTextField seed = new JTextField("seed-node-ip");
+        final JComponent[] comps = {roles, ips, seed};
         JOptionPane jp = new JOptionPane(comps);
         if (JOptionPane.OK_OPTION ==
                 JOptionPane.showConfirmDialog(null, comps, "akka parameters", JOptionPane.OK_CANCEL_OPTION)){
             confstr = String.format(
-                    "akka.cluster.roles=[%s]\nakka.remote.netty.tcp.hostname=\"%s\"",
-                    roles.getSelectedItem().toString(), ips.getSelectedItem().toString());
+                    "akka.cluster.roles=[%s]\nakka.remote.netty.tcp.hostnamne=\"%s\"\nakka.cluster.seed-nodes=[\"akka.tcp://k-core@%s:25515\", \"akka.tcp://k-core@%s:25515\"]",
+                    roles.getSelectedItem().toString(), ips.getSelectedItem().toString(), ips.getSelectedItem().toString(), seed.getText());
 
         } else {
             confstr = "";
