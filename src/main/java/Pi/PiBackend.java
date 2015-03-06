@@ -1,4 +1,4 @@
-package kcore;
+package Pi;
 
 import akka.actor.UntypedActor;
 import akka.dispatch.Futures;
