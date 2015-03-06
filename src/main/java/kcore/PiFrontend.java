@@ -22,9 +22,9 @@ public class PiFrontend extends UntypedActor {
   ActorRef backend = getContext().actorOf(FromConfig.getInstance().props(),
       "piBackendRouter");
 
-  public PiFrontend(int upToN, boolean repeat) {
+  public PiFrontend() {
     this.upToN = 20;
-    this.repeat = repeat;
+    this.repeat = true;
   }
 
   @Override

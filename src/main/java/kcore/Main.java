@@ -43,6 +43,7 @@ public class Main {
             @Override
             public void run() {
                 sys.actorOf(Props.create(MetricsListener.class), "metricsListener");
+
                 if (roles.contains("frontend")){
                     sys.actorOf(Props.create(PiFrontend.class), "piFrontend");
                 }
@@ -79,7 +80,7 @@ public class Main {
         if (JOptionPane.OK_OPTION ==
                 JOptionPane.showConfirmDialog(null, comps, "akka parameters", JOptionPane.OK_CANCEL_OPTION)){
             confstr = String.format(
-                    "akka.cluster.roles=[%s]\nakka.remote.netty.tcp.hostnamne=\"%s\"\nakka.cluster.seed-nodes=[\"akka.tcp://k-core@%s:25515\", \"akka.tcp://k-core@%s:25515\"]",
+                    "akka.cluster.roles=[%s]\nakka.remote.netty.tcp.hostname=\"%s\"\nakka.cluster.seed-nodes=[\"akka.tcp://k-core@%s:25515\", \"akka.tcp://k-core@%s:25515\"]",
                     roles.getSelectedItem().toString(), ips.getSelectedItem().toString(), ips.getSelectedItem().toString(), seed.getText());
 
         } else {
