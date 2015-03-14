@@ -1,19 +1,15 @@
 /**
  * Created by Stefano on 04/02/2015.
  */
-package kcore;
+package Pi;
 
-import Pi.MetricsListener;
-import Pi.PiBackend;
-import Pi.PiFrontend;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.cluster.Cluster;
-
-import com.typesafe.config.*;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 import javax.swing.*;
-
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -23,27 +19,17 @@ import java.util.Vector;
 
 public class Main {
     public static void main(String[] args){
-        final Config confstr;
+        String confstr;
         if(args.length > 1) {
-            confstr = readParamsFromCli(args);
+            confstr = args[1];
         } else {
             confstr = readParamsFromGui();
 
         }
         final Config defaultConfig = ConfigFactory.load("default");
-        if (confstr != null) {
-            final Config config = confstr.withFallback(defaultConfig);
-            fireUpActorSystem(config);
-        } else {
-            final Config config1 = ConfigFactory.parseResourcesAnySyntax("test1").withFallback(defaultConfig);
-            fireUpActorSystem(config1);
-            final Config config2 = ConfigFactory.parseResourcesAnySyntax("test2").withFallback(defaultConfig);
-            fireUpActorSystem(config2);
-        }
-    }
-
-    private static void fireUpActorSystem(Config config) {
+        final Config config = ConfigFactory.parseString(confstr).withFallback(defaultConfig);
         final ActorSystem sys = ActorSystem.create("k-core", config);
+        sys.log().debug("parameters: {}", confstr);
         sys.log().debug("actor system initialized");
 
 
@@ -57,7 +43,7 @@ public class Main {
         cluster.registerOnMemberUp(new Runnable() {
             @Override
             public void run() {
-               // sys.actorOf(Props.create(MetricsListener.class), "metricsListener");
+                sys.actorOf(Props.create(MetricsListener.class), "metricsListener");
 
                 if (roles.contains("frontend")){
                     sys.actorOf(Props.create(PiFrontend.class), "piFrontend");
@@ -70,14 +56,7 @@ public class Main {
         });
     }
 
-    private static Config readParamsFromCli(String[] args) {
-        if (args[1] != "test")
-            return ConfigFactory.parseString(args[1]);
-        else
-            return null;
-    }
-
-    private static Config readParamsFromGui() {
+    private static String readParamsFromGui() {
         String confstr;
         String[] roleStr = {"frontend", "backend"};
         JComboBox roles = new JComboBox(roleStr);
@@ -106,8 +85,8 @@ public class Main {
                     roles.getSelectedItem().toString(), ips.getSelectedItem().toString(), ips.getSelectedItem().toString(), seed.getText());
 
         } else {
-            return null;
+            confstr = "";
         }
-        return ConfigFactory.parseString(confstr);
+        return confstr;
     }
 }
