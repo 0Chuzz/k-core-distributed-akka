@@ -29,7 +29,7 @@ public class PiFrontend extends UntypedActor {
 
   @Override
   public void preStart() {
-    log.info("Initializing...");
+    log.info("Initializing frontend");
     sendJobs();
     getContext().setReceiveTimeout(Duration.create(10, TimeUnit.SECONDS));
   }

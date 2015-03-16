@@ -9,6 +9,7 @@ import kcore.DistKCore;
 import kcore.IntGraph;
 import kcore.messages.CorenessState;
 import kcore.messages.DirectLoadPartition;
+import kcore.messages.FilenameLoadPartition;
 
 import java.io.IOException;
 
@@ -22,14 +23,10 @@ public class Master extends UntypedActor {
     IntGraph graph;
     @Override
     public void preStart(){
-        try {
-            graph = DistKCore.graphConstruction("");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
         // start work
         for(int i = 0; i < 10; i++) {
-            backend.tell(new DirectLoadPartition(graph),getSelf());
+            backend.tell(new FilenameLoadPartition(""),getSelf());
         }
     }
 

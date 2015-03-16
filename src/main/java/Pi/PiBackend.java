@@ -6,15 +6,22 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.pattern.Patterns;
 import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
 
 import java.math.BigInteger;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 
 //#backend
 public class PiBackend extends UntypedActor {
     final int N = 20;
     final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+
+    @Override
+    public void preStart() {
+        log.info("Initializing backend");
+    }
 
     private double calculatePiFor(int start, int nrOfElements) {
         double acc = 0.0;

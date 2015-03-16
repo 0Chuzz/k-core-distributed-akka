@@ -14,6 +14,7 @@ import com.typesafe.config.*;
 
 import javax.swing.*;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -35,15 +36,20 @@ public class Main {
             final Config config = confstr.withFallback(defaultConfig);
             fireUpActorSystem(config);
         } else {
-            final Config config1 = ConfigFactory.parseResourcesAnySyntax("test1").withFallback(defaultConfig);
-            fireUpActorSystem(config1);
             final Config config2 = ConfigFactory.parseResourcesAnySyntax("test2").withFallback(defaultConfig);
-            fireUpActorSystem(config2);
+            fireUpActorSystem(config2, "k-core");
+            final Config config1 = ConfigFactory.parseResourcesAnySyntax("test1").withFallback(defaultConfig);
+            fireUpActorSystem(config1, "k-core");
+
         }
     }
 
     private static void fireUpActorSystem(Config config) {
-        final ActorSystem sys = ActorSystem.create("k-core", config);
+        fireUpActorSystem(config, "k-core");
+    }
+
+    private static void fireUpActorSystem(Config config, String kcorename) {
+        final ActorSystem sys = ActorSystem.create(kcorename, config);
         sys.log().debug("actor system initialized");
 
 
@@ -57,7 +63,7 @@ public class Main {
         cluster.registerOnMemberUp(new Runnable() {
             @Override
             public void run() {
-               // sys.actorOf(Props.create(MetricsListener.class), "metricsListener");
+                sys.actorOf(Props.create(MetricsListener.class), "metricsListener");
 
                 if (roles.contains("frontend")){
                     sys.actorOf(Props.create(PiFrontend.class), "piFrontend");
@@ -72,7 +78,7 @@ public class Main {
 
     private static Config readParamsFromCli(String[] args) {
         if (args[1] != "test")
-            return ConfigFactory.parseString(args[1]);
+            return ConfigFactory.parseFile(new File(args[1]));
         else
             return null;
     }
