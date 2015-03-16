@@ -11,6 +11,8 @@ import akka.actor.Props;
 import akka.cluster.Cluster;
 
 import com.typesafe.config.*;
+import kcore.actors.Master;
+import kcore.actors.Worker;
 
 import javax.swing.*;
 
@@ -66,11 +68,11 @@ public class Main {
                 sys.actorOf(Props.create(MetricsListener.class), "metricsListener");
 
                 if (roles.contains("frontend")){
-                    sys.actorOf(Props.create(PiFrontend.class), "piFrontend");
+                    sys.actorOf(Props.create(Master.class), "Master");
                 }
 
                 if (roles.contains("backend")){
-                    sys.actorOf(Props.create(PiBackend.class), "piBackend");
+                    sys.actorOf(Props.create(Worker.class), "Worker");
                 }
             }
         });
