@@ -26,7 +26,7 @@ public class Master extends UntypedActor {
 
         // start work
         for(int i = 0; i < 10; i++) {
-            backend.tell(new FilenameLoadPartition(""),getSelf());
+            backend.tell(new FilenameLoadPartition("graphfile"),getSelf());
         }
     }
 
