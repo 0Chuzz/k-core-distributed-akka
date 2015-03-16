@@ -23,7 +23,7 @@ public class Master extends UntypedActor {
     IntGraph graph;
     @Override
     public void preStart(){
-
+        log.debug("Master starting");
         // start work
         for(int i = 0; i < 10; i++) {
             backend.tell(new FilenameLoadPartition("graphfile"),getSelf());
@@ -33,7 +33,9 @@ public class Master extends UntypedActor {
     @Override
     public void onReceive(Object message) throws Exception {
         // collect results
+        log.debug(message.toString());
         final CorenessState coreness = (CorenessState) message;
-        log.debug(coreness.toString());
+
+        if (coreness != null) log.debug(coreness.toString());
     }
 }
