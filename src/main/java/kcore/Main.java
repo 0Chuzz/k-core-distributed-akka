@@ -33,15 +33,18 @@ public class Main {
             confstr = readParamsFromGui();
 
         }
-        final Config defaultConfig = ConfigFactory.load("default");
+
         if (confstr != null) {
+            final Config defaultConfig = ConfigFactory.load("default");
             final Config config = confstr.withFallback(defaultConfig);
             fireUpActorSystem(config);
         } else {
-            final Config config2 = ConfigFactory.parseResourcesAnySyntax("test2").withFallback(defaultConfig);
-            fireUpActorSystem(config2, "k-core");
-            final Config config1 = ConfigFactory.parseResourcesAnySyntax("test1").withFallback(defaultConfig);
+            final Config config1 = ConfigFactory.load("test1");
             fireUpActorSystem(config1, "k-core");
+
+            final Config config2 = ConfigFactory.load("test2");
+            fireUpActorSystem(config2, "k-core");
+
 
         }
     }
