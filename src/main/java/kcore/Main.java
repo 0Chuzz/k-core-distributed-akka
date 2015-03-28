@@ -65,7 +65,7 @@ public class Main {
         cluster.registerOnMemberUp(new Runnable() {
             @Override
             public void run() {
-                sys.actorOf(Props.create(MetricsListener.class), "metricsListener");
+                //sys.actorOf(Props.create(MetricsListener.class), "metricsListener");
 
                 if (roles.contains("frontend")){
                     sys.actorOf(Props.create(Master.class), "Master");
