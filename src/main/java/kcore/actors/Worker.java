@@ -9,6 +9,8 @@ import kcore.KShellFS;
 import kcore.messages.CorenessState;
 import kcore.messages.LoadPartition;
 
+import java.io.File;
+
 /**
  * Created by Stefano on 09/03/2015.
  */
@@ -33,9 +35,15 @@ public class Worker extends UntypedActor {
             //step 1: execution of the standard k-core decomposition algorithm in parallel
             //System.out.println("****** Step 1: Computing the coreness in local partitions ******");
             KShellFS ks = new KShellFS();
-            int[] corenessTable=ks.execute(graphFile);
+            int[] corenessTable;
+            try {
+                corenessTable=ks.execute(graphFile);
+            } finally {
+                new File(graphFile).delete();
+            }
             log.debug(corenessTable.toString());
             getSender().tell(new CorenessState(corenessTable), getSelf());
+
         }
     }
 }

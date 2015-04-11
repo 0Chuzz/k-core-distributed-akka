@@ -132,6 +132,7 @@ public int[] execute(String file) throws Exception
  // System.out.println("max " + max);
 	
   //System.out.println("TIME " + n + " " + (System.nanoTime() - time));
+    f.close();
   return index;
 }
 
