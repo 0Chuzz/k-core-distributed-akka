@@ -24,4 +24,9 @@ public class DirectLoadPartition extends LoadPartition {
     public IntGraph getPartition() {
         return graph;
     }
+
+    @Override
+    public int getPartitionId() {
+        return 0;
+    }
 }

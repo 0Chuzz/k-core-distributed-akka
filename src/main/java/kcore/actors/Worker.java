@@ -22,9 +22,9 @@ public class Worker extends UntypedActor {
     @Override
     public void onReceive(Object message) throws Exception {
         log.debug(message.toString());
-        final String graphFile = "graphFile2";
         if (message instanceof LoadPartition){
             final LoadPartition msg = (LoadPartition) message;
+            final String graphFile = "graphFile" + Integer.toString(msg.getPartitionId());
             final IntGraph graph = msg.getPartition();
             //transform the graph object IntGraph to a binary file
             DistKCore.graphFileConstruction(graph, graphFile);

@@ -75,7 +75,7 @@ public class Main {
                 }
 
                 if (roles.contains("backend")){
-                    sys.actorOf(Props.create(Worker.class), "workerR");
+                    //sys.actorOf(Props.create(Worker.class), "workerR");
                 }
             }
         });

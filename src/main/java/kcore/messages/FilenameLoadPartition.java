@@ -10,9 +10,12 @@ import java.io.IOException;
  */
 public class FilenameLoadPartition extends LoadPartition {
     private String filename;
+    private int partitionId;
+    static int partitionIds = 0;
 
     public FilenameLoadPartition(String filename) {
         this.filename = filename;
+        this.partitionId = partitionIds++;
     }
 
     @Override
@@ -23,5 +26,10 @@ public class FilenameLoadPartition extends LoadPartition {
             e.printStackTrace();
             return null;
         }
+    }
+
+    @Override
+    public int getPartitionId() {
+        return partitionId;
     }
 }
