@@ -13,4 +13,15 @@ public class CorenessState implements Serializable {
     public CorenessState(int[] corenessTable) {
         coreness = corenessTable;
     }
+
+    public String toString() {
+        StringBuilder b = new StringBuilder();
+        b.append("[");
+        for (int i: coreness){
+            b.append(i);
+            b.append(", ");
+        }
+        b.append("]");
+        return b.toString();
+    }
 }

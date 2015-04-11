@@ -36,6 +36,6 @@ public class Master extends UntypedActor {
         log.debug(message.toString());
         final CorenessState coreness = (CorenessState) message;
 
-        if (coreness != null) log.debug(coreness.toString());
+        if (coreness != null) log.info("Result: {}", coreness.toString());
     }
 }

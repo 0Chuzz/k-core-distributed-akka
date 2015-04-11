@@ -18,7 +18,7 @@ public class DistKCore {
 
 	public static IntGraph graphConstruction(String file) throws IOException
 	{
-		int size=100000;
+		int size=100;
 		//int startFrom;
 		String line;
 		
