@@ -71,11 +71,11 @@ public class Main {
                 //sys.actorOf(Props.create(MetricsListener.class), "metricsListener");
 
                 if (roles.contains("frontend")){
-                    sys.actorOf(Props.create(Master.class), "Master");
+                    sys.actorOf(Props.create(Master.class), "master");
                 }
 
                 if (roles.contains("backend")){
-                    sys.actorOf(Props.create(Worker.class), "Worker");
+                    sys.actorOf(Props.create(Worker.class), "workerR");
                 }
             }
         });

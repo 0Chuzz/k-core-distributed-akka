@@ -18,7 +18,7 @@ import java.io.IOException;
  */
 public class Master extends UntypedActor {
     ActorRef backend = getContext().actorOf(FromConfig.getInstance().props(),
-            "WorkerRouter");
+            "workersRouter");
     LoggingAdapter log = Logging.getLogger(getContext().system(), this);
     IntGraph graph;
     @Override
