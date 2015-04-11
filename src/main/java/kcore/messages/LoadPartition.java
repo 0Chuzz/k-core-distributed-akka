@@ -9,5 +9,6 @@ import java.io.Serializable;
  */
 abstract public class LoadPartition implements Serializable {
     public abstract IntGraph getPartition();
+
     public abstract int getPartitionId();
 }

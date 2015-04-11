@@ -18,13 +18,14 @@ public class Worker extends UntypedActor {
     LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
     @Override
-    public void preStart(){
+    public void preStart() {
         log.debug("Worker starting");
     }
+
     @Override
     public void onReceive(Object message) throws Exception {
         log.debug(message.toString());
-        if (message instanceof LoadPartition){
+        if (message instanceof LoadPartition) {
             final LoadPartition msg = (LoadPartition) message;
             final String graphFile = "graphFile" + Integer.toString(msg.getPartitionId());
             final IntGraph graph = msg.getPartition();
@@ -37,7 +38,7 @@ public class Worker extends UntypedActor {
             KShellFS ks = new KShellFS();
             int[] corenessTable;
             try {
-                corenessTable=ks.execute(graphFile);
+                corenessTable = ks.execute(graphFile);
             } finally {
                 new File(graphFile).delete();
             }

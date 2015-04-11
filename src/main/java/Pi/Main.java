@@ -18,9 +18,9 @@ import java.util.Set;
 import java.util.Vector;
 
 public class Main {
-    public static void main(String[] args){
+    public static void main(String[] args) {
         String confstr;
-        if(args.length > 1) {
+        if (args.length > 1) {
             confstr = args[1];
         } else {
             confstr = readParamsFromGui();
@@ -35,7 +35,7 @@ public class Main {
 
         final Cluster cluster = Cluster.get(sys);
         final Set<String> roles = cluster.getSelfRoles();
-        if (roles.isEmpty()){
+        if (roles.isEmpty()) {
             sys.log().error("no role specified for node");
             sys.shutdown();
             return;
@@ -45,11 +45,11 @@ public class Main {
             public void run() {
                 sys.actorOf(Props.create(MetricsListener.class), "metricsListener");
 
-                if (roles.contains("frontend")){
+                if (roles.contains("frontend")) {
                     sys.actorOf(Props.create(PiFrontend.class), "piFrontend");
                 }
 
-                if (roles.contains("backend")){
+                if (roles.contains("backend")) {
                     sys.actorOf(Props.create(PiBackend.class), "piBackend");
                 }
             }
@@ -63,10 +63,10 @@ public class Main {
         Vector<String> ipStr = new Vector<String>();
         try {
             Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
-            while (networkInterfaces.hasMoreElements()){
+            while (networkInterfaces.hasMoreElements()) {
                 NetworkInterface ni = networkInterfaces.nextElement();
                 Enumeration<InetAddress> inetAddresses = ni.getInetAddresses();
-                while(inetAddresses.hasMoreElements()){
+                while (inetAddresses.hasMoreElements()) {
                     InetAddress ip = inetAddresses.nextElement();
                     ipStr.add(ip.getHostAddress());
                 }
@@ -79,7 +79,7 @@ public class Main {
         final JComponent[] comps = {roles, ips, seed};
         JOptionPane jp = new JOptionPane(comps);
         if (JOptionPane.OK_OPTION ==
-                JOptionPane.showConfirmDialog(null, comps, "akka parameters", JOptionPane.OK_CANCEL_OPTION)){
+                JOptionPane.showConfirmDialog(null, comps, "akka parameters", JOptionPane.OK_CANCEL_OPTION)) {
             confstr = String.format(
                     "akka.cluster.roles=[%s]\nakka.remote.netty.tcp.hostname=\"%s\"\nakka.cluster.seed-nodes=[\"akka.tcp://k-core@%s:25515\", \"akka.tcp://k-core@%s:25515\"]",
                     roles.getSelectedItem().toString(), ips.getSelectedItem().toString(), ips.getSelectedItem().toString(), seed.getText());

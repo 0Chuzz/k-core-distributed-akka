@@ -9,9 +9,9 @@ import java.io.IOException;
  * Created by Stefano on 16/03/2015.
  */
 public class FilenameLoadPartition extends LoadPartition {
+    static int partitionIds = 0;
     private String filename;
     private int partitionId;
-    static int partitionIds = 0;
 
     public FilenameLoadPartition(String filename) {
         this.filename = filename;

@@ -1,7 +1,5 @@
 package kcore.messages;
 
-import akka.event.LoggingAdapter;
-
 import java.io.Serializable;
 
 /**
@@ -17,7 +15,7 @@ public class CorenessState implements Serializable {
     public String toString() {
         StringBuilder b = new StringBuilder();
         b.append("[");
-        for (int i: coreness){
+        for (int i : coreness) {
             b.append(i);
             b.append(", ");
         }

@@ -6,11 +6,8 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.pattern.Patterns;
 import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
 
-import java.math.BigInteger;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 
 //#backend
