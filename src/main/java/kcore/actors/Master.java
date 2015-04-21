@@ -6,10 +6,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.routing.FromConfig;
 import kcore.IntGraph;
-import kcore.messages.CorenessState;
-import kcore.messages.FilenameLoadPartition;
-import kcore.messages.FrontierEdge;
-import kcore.messages.NewPartitionActor;
+import kcore.messages.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -20,6 +17,11 @@ import java.util.*;
 /**
  * Created by Stefano on 09/03/2015.
  */
+class FrontierEdgeDb {
+    int node1, node2;
+    int coreness1 = -1, coreness2 = -1;
+    ActorRef worker1, worker2;
+}
 public class Master extends UntypedActor {
     ActorRef backend = getContext().actorOf(FromConfig.getInstance().props(),
             "workersRouter");
@@ -27,7 +29,7 @@ public class Master extends UntypedActor {
     IntGraph graph;
     HashMap<Integer, Integer> nodeToPartition = new HashMap<Integer, Integer>();
     Map<Integer, ActorRef> partitionToActor = new HashMap<Integer, ActorRef>();
-    Set<FrontierEdge> frontierEdges = new HashSet<FrontierEdge>();
+    Set<FrontierEdgeDb> frontierEdges = new HashSet<FrontierEdgeDb>();
     int numPartitions, corenessReceived;
 
 
@@ -83,19 +85,14 @@ public class Master extends UntypedActor {
         while (reader.hasNextInt()) {
             int node1 = reader.nextInt();
             int node2 = reader.nextInt();
-            try {
-                partitionFiles[nodeToPartition.get(node1)].write("" + node1 + " " + node2 + "\n");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            if (nodeToPartition.get(node2) != nodeToPartition.get(node1)) {
+            if (nodeToPartition.get(node2) == nodeToPartition.get(node1)) {
                 try {
-                    partitionFiles[nodeToPartition.get(node2)].write("" + node1 + " " + node2 + "\n");
+                    partitionFiles[nodeToPartition.get(node1)].write("" + node1 + " " + node2 + "\n");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
-                FrontierEdge e = new FrontierEdge();
+            } else {
+                FrontierEdgeDb e = new FrontierEdgeDb();
                 e.node1 = node1;
                 e.node2 = node2;
                 frontierEdges.add(e);
@@ -119,14 +116,14 @@ public class Master extends UntypedActor {
         if (message instanceof CorenessState) {
             final CorenessState coreness = (CorenessState) message;
             if (++corenessReceived == numPartitions) {
-                for (FrontierEdge fe : frontierEdges) {
+                for (FrontierEdgeDb fe : frontierEdges) {
                     Integer part1 = nodeToPartition.get(fe.node1);
                     ActorRef worker1 = partitionToActor.get(part1);
                     Integer part2 = nodeToPartition.get(fe.node2);
                     ActorRef worker2 = partitionToActor.get(part2);
-                    
-                    worker1.tell(fe, getSelf());
-                    worker2.tell(fe, getSelf());
+
+                    worker1.tell(new CorenessQuery(fe.node1), getSelf());
+                    worker2.tell(new CorenessQuery(fe.node2), getSelf());
                 }
             }
             log.info("received {} replies", corenessReceived);
@@ -134,6 +131,43 @@ public class Master extends UntypedActor {
         } else if (message instanceof NewPartitionActor) {
             final NewPartitionActor pa = (NewPartitionActor) message;
             partitionToActor.put(pa.getId(), pa.getActorRef());
+        } else if (message instanceof CorenessReply) {
+            final CorenessReply r = (CorenessReply) message;
+            for (FrontierEdgeDb db : frontierEdges) {
+                if (r.node == db.node1) {
+                    db.coreness1 = r.coreness;
+                    db.worker1 = getSender();
+                }
+                if (r.node == db.node2) {
+                    db.coreness2 = r.coreness;
+                    db.worker2 = getSender();
+                }
+
+                if (db.coreness1 != -1 && db.coreness2 != -1) {
+                    this.getReachableNodes(db);
+                }
+            }
+        } else if (message instanceof ReachableNodesReply) {
+            final ReachableNodesReply reply = (ReachableNodesReply) message;
+            log.info("reachable from {} w coreness {} :{}", reply.node, reply.coreness, reply.reachableNodes);
+        }
+    }
+
+    private void getReachableNodes(FrontierEdgeDb db) {
+        if (db.coreness1 <= db.coreness2) {
+            db.worker1.tell(new ReachableNodesQuery(db.node1, db.coreness1), getSelf());
+        }
+        if (db.coreness2 <= db.coreness1) {
+            db.worker2.tell(new ReachableNodesQuery(db.node2, db.coreness2), getSelf());
+        }
+    }
+
+
+    private HashSet<Integer> pruneCandidateNodes(HashSet<Integer> candidateNodes) {
+        boolean changed = false;
+        for (int node : candidateNodes) {
+            int count = 0;
+            
         }
     }
 }

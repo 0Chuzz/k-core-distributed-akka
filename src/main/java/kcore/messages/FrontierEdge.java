@@ -1,7 +1,5 @@
 package kcore.messages;
 
-import akka.actor.ActorRef;
-
 import java.io.Serializable;
 
 /**
@@ -9,6 +7,4 @@ import java.io.Serializable;
  */
 public class FrontierEdge implements Serializable {
     public int node1;
-    public int node2;
-    ActorRef part1, part2;
 }

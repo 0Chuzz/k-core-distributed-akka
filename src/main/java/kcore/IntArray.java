@@ -32,6 +32,10 @@ public final class IntArray {
 
     }
 
+    public int[] getA() {
+        return A;
+    }
+
     public Object clone() {
         IntArray temp = new IntArray(size);
         temp.size = size;

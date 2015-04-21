@@ -6,11 +6,10 @@ import akka.event.LoggingAdapter;
 import kcore.DistKCore;
 import kcore.IntGraph;
 import kcore.KShellFS;
-import kcore.messages.CorenessState;
-import kcore.messages.FrontierEdge;
-import kcore.messages.LoadPartition;
+import kcore.messages.*;
 
 import java.io.File;
+import java.util.HashSet;
 
 /**
  * Created by Stefano on 09/03/2015.
@@ -18,6 +17,7 @@ import java.io.File;
 public class Worker extends UntypedActor {
     LoggingAdapter log = Logging.getLogger(getContext().system(), this);
     int[] corenessTable;
+    IntGraph graph;
     int partitionId;
 
     @Override
@@ -32,7 +32,8 @@ public class Worker extends UntypedActor {
             final LoadPartition msg = (LoadPartition) message;
             partitionId = msg.getPartitionId();
             final String graphFile = "graphFile" + Integer.toString(msg.getPartitionId());
-            final IntGraph graph = msg.getPartition();
+
+            graph = msg.getPartition();
             //transform the graph object IntGraph to a binary file
             DistKCore.graphFileConstruction(graph, graphFile);
 
@@ -51,9 +52,15 @@ public class Worker extends UntypedActor {
             corenessState = new CorenessState(msg.getPartitionId());
             getSender().tell(corenessState, getSelf());
 
-        } else if (message instanceof FrontierEdge) {
-            final FrontierEdge fe = (FrontierEdge) message;
-            log.info("I am {}  and have a frontier edge from {} to {}", partitionId, fe.node1, fe.node2);
+        } else if (message instanceof CorenessQuery) {
+            final CorenessQuery query = (CorenessQuery) message;
+            getSender().tell(new CorenessReply(query.node1, corenessTable[query.node1], partitionId), getSelf());
+            //log.info("Coreness query for node {}", query.node1);
+            // log.info("I am {}  and have a frontier edge from {} to {}", partitionId, fe.node1, 123);
+        } else if (message instanceof ReachableNodesQuery) {
+            final ReachableNodesQuery query = (ReachableNodesQuery) message;
+            getSender().tell(new ReachableNodesReply(getReachableNodes(query.node, query.coreness), partitionId,
+                    query.node, query.coreness), getSelf());
         }
     }
 
@@ -68,4 +75,20 @@ public class Worker extends UntypedActor {
         b.append("]");
         return b.toString();
     }
+
+    public HashSet<Integer> getReachableNodes(int node, int coreness) {
+        HashSet<Integer> ret = new HashSet<Integer>();
+        getReachableNodes(node, coreness, ret);
+        return ret;
+    }
+
+    public void getReachableNodes(int node, int coreness, HashSet<Integer> ret) {
+        if (corenessTable[node] == coreness && !ret.contains(node)) {
+            ret.add(node);
+            for (int neighNode : graph.neighbors(node).getA()) {
+                getReachableNodes(neighNode, coreness, ret);
+            }
+        }
+    }
+
 }
