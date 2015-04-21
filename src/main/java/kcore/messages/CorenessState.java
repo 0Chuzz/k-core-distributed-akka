@@ -7,9 +7,11 @@ import java.io.Serializable;
  */
 public class CorenessState implements Serializable {
     private final int[] coreness;
+    private int partitionId;
 
-    public CorenessState(int[] corenessTable) {
+    public CorenessState(int[] corenessTable, int partitionId) {
         coreness = corenessTable;
+        this.partitionId = partitionId;
     }
 
     public String toString() {
@@ -21,5 +23,9 @@ public class CorenessState implements Serializable {
         }
         b.append("]");
         return b.toString();
+    }
+
+    public int getPartitionId() {
+        return partitionId;
     }
 }

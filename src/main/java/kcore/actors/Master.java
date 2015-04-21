@@ -1,14 +1,10 @@
 package kcore.actors;
 
 import akka.actor.ActorRef;
-import akka.actor.Props;
 import akka.actor.UntypedActor;
-import akka.cluster.routing.AdaptiveLoadBalancingPool;
-import akka.cluster.routing.ClusterRouterPool;
-import akka.cluster.routing.ClusterRouterPoolSettings;
-import akka.cluster.routing.SystemLoadAverageMetricsSelector;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.routing.FromConfig;
 import kcore.IntGraph;
 import kcore.messages.CorenessState;
 import kcore.messages.FilenameLoadPartition;
@@ -17,26 +13,24 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by Stefano on 09/03/2015.
  */
 public class Master extends UntypedActor {
-    ActorRef backend; /*= getContext().actorOf(FromConfig.getInstance().props(),
-            "workersRouter");*/
+    ActorRef backend = getContext().actorOf(FromConfig.getInstance().props(),
+            "workersRouter");
     LoggingAdapter log = Logging.getLogger(getContext().system(), this);
     IntGraph graph;
+    Map<Integer, ActorRef> partitionToActor = new HashMap<Integer, ActorRef>();
 
     @Override
     public void preStart() {
         log.debug("Master starting");
         // start work
         int totalInstances = splitPartitionFiles("graphfile", "partfile");
-        int maxInstancesPerNode = totalInstances;
+        /*int maxInstancesPerNode = totalInstances;
         boolean allowLocalRoutees = true;
         String useRole = "backend";
         backend = getContext().actorOf(
@@ -44,7 +38,7 @@ public class Master extends UntypedActor {
                         SystemLoadAverageMetricsSelector.getInstance(), 0),
                         new ClusterRouterPoolSettings(totalInstances, maxInstancesPerNode,
                                 allowLocalRoutees, useRole)).props(Props
-                        .create(Worker.class)), "workersRouter");
+                        .create(Worker.class)), "workersRouter"); */
         for (int i = 0; i < totalInstances; i++) {
             backend.tell(new FilenameLoadPartition("smallfile" + i), getSelf());
         }
@@ -113,8 +107,14 @@ public class Master extends UntypedActor {
     public void onReceive(Object message) throws Exception {
         // collect results
         log.debug(message.toString());
-        final CorenessState coreness = (CorenessState) message;
 
-        if (coreness != null) log.info("Result: {}", coreness.toString());
+        if (message instanceof CorenessState) {
+            final CorenessState coreness = (CorenessState) message;
+            log.info("Result for partition {}: {}", coreness.getPartitionId(), coreness.toString());
+            partitionToActor.put(coreness.getPartitionId(), getSender());
+            for (Map.Entry<Integer, ActorRef> entry : partitionToActor.entrySet()) {
+                log.info("Partition {} is {}", entry.getKey(), entry.getValue());
+            }
+        } //else if (message instanceof )
     }
 }

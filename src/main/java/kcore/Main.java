@@ -9,6 +9,7 @@ import akka.cluster.Cluster;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import kcore.actors.Master;
+import kcore.actors.WorkerCreator;
 
 import javax.swing.*;
 import java.io.File;
@@ -69,11 +70,12 @@ public class Main {
                     sys.actorOf(Props.create(Master.class), "master");
                 }
 
-                if (roles.contains("backend")) {
-                    //sys.actorOf(Props.create(Worker.class), "workerR");
-                }
+
             }
         });
+        if (roles.contains("backend")) {
+            sys.actorOf(Props.create(WorkerCreator.class), "workerCreator");
+        }
     }
 
     private static Config readParamsFromCli(String[] args) {

@@ -16,6 +16,7 @@ import java.io.File;
  */
 public class Worker extends UntypedActor {
     LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+    boolean test = false;
 
     @Override
     public void preStart() {
@@ -26,6 +27,7 @@ public class Worker extends UntypedActor {
     public void onReceive(Object message) throws Exception {
         log.debug(message.toString());
         if (message instanceof LoadPartition) {
+            if (test) log.warning("multiple load partitions!");
             final LoadPartition msg = (LoadPartition) message;
             final String graphFile = "graphFile" + Integer.toString(msg.getPartitionId());
             final IntGraph graph = msg.getPartition();
@@ -43,7 +45,8 @@ public class Worker extends UntypedActor {
                 new File(graphFile).delete();
             }
             log.debug(corenessTable.toString());
-            getSender().tell(new CorenessState(corenessTable), getSelf());
+            test = true;
+            getSender().tell(new CorenessState(corenessTable, msg.getPartitionId()), getSelf());
 
         }
     }
