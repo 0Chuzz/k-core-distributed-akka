@@ -9,6 +9,7 @@ import kcore.KShellFS;
 import kcore.messages.*;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.HashSet;
 
 /**
@@ -54,14 +55,22 @@ public class Worker extends UntypedActor {
 
         } else if (message instanceof CorenessQuery) {
             final CorenessQuery query = (CorenessQuery) message;
-            getSender().tell(new CorenessReply(query.node1, corenessTable[query.node1], partitionId), getSelf());
-            //log.info("Coreness query for node {}", query.node1);
-            // log.info("I am {}  and have a frontier edge from {} to {}", partitionId, fe.node1, 123);
+            sendCorenessReply(query);
+
         } else if (message instanceof ReachableNodesQuery) {
             final ReachableNodesQuery query = (ReachableNodesQuery) message;
             getSender().tell(new ReachableNodesReply(getReachableNodes(query.node, query.coreness), partitionId,
                     query.node, query.coreness), getSelf());
         }
+    }
+
+    private void sendCorenessReply(CorenessQuery query) {
+        HashMap<Integer, Integer> replymap = new HashMap<Integer, Integer>();
+        for (int node : query.node1) {
+            replymap.put(node, corenessTable[node]);
+
+        }
+        getSender().tell(new CorenessReply(replymap, partitionId), getSelf());
     }
 
 
@@ -79,6 +88,7 @@ public class Worker extends UntypedActor {
     public HashSet<Integer> getReachableNodes(int node, int coreness) {
         HashSet<Integer> ret = new HashSet<Integer>();
         getReachableNodes(node, coreness, ret);
+        ret = pruneCandidateNodes(ret);
         return ret;
     }
 
@@ -89,6 +99,28 @@ public class Worker extends UntypedActor {
                 getReachableNodes(neighNode, coreness, ret);
             }
         }
+    }
+
+
+    private HashSet<Integer> pruneCandidateNodes(HashSet<Integer> candidateNodes) {
+        boolean changed = false;
+        for (int node : candidateNodes) {
+            int count = 0;
+            for (int neighbour : graph.neighbors(node).getA()) {
+                if (candidateNodes.contains(neighbour) || corenessTable[neighbour] > corenessTable[node]) {
+                    count++;
+                }
+            }
+            //TODO check previous frontier edges
+            if (count < corenessTable[node]) {
+                changed = true;
+                candidateNodes.remove(node);
+            }
+        }
+        if (changed) {
+            candidateNodes = pruneCandidateNodes(candidateNodes);
+        }
+        return candidateNodes;
     }
 
 }

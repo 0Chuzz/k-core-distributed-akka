@@ -116,40 +116,57 @@ public class Master extends UntypedActor {
         if (message instanceof CorenessState) {
             final CorenessState coreness = (CorenessState) message;
             if (++corenessReceived == numPartitions) {
-                for (FrontierEdgeDb fe : frontierEdges) {
-                    Integer part1 = nodeToPartition.get(fe.node1);
-                    ActorRef worker1 = partitionToActor.get(part1);
-                    Integer part2 = nodeToPartition.get(fe.node2);
-                    ActorRef worker2 = partitionToActor.get(part2);
-
-                    worker1.tell(new CorenessQuery(fe.node1), getSelf());
-                    worker2.tell(new CorenessQuery(fe.node2), getSelf());
-                }
+                getAllFrontierEdgesCoreness();
             }
-            log.info("received {} replies", corenessReceived);
+            log.debug("received {} replies", corenessReceived);
 
         } else if (message instanceof NewPartitionActor) {
             final NewPartitionActor pa = (NewPartitionActor) message;
             partitionToActor.put(pa.getId(), pa.getActorRef());
         } else if (message instanceof CorenessReply) {
             final CorenessReply r = (CorenessReply) message;
-            for (FrontierEdgeDb db : frontierEdges) {
-                if (r.node == db.node1) {
-                    db.coreness1 = r.coreness;
-                    db.worker1 = getSender();
-                }
-                if (r.node == db.node2) {
-                    db.coreness2 = r.coreness;
-                    db.worker2 = getSender();
-                }
-
-                if (db.coreness1 != -1 && db.coreness2 != -1) {
-                    this.getReachableNodes(db);
-                }
-            }
+            updateCorenessTable(r);
         } else if (message instanceof ReachableNodesReply) {
             final ReachableNodesReply reply = (ReachableNodesReply) message;
             log.info("reachable from {} w coreness {} :{}", reply.node, reply.coreness, reply.reachableNodes);
+        }
+    }
+
+    private void updateCorenessTable(CorenessReply r) {
+        for (FrontierEdgeDb db : frontierEdges) {
+            if (r.map.containsKey(db.node1)) {
+                db.coreness1 = r.map.get(db.node1);
+                db.worker1 = getSender();
+            }
+            if (r.map.containsKey(db.node2)) {
+                db.coreness2 = r.map.get(db.node2);
+                db.worker2 = getSender();
+            }
+
+            if (db.coreness1 != -1 && db.coreness2 != -1) {
+                this.getReachableNodes(db);
+            }
+        }
+    }
+
+    private void getAllFrontierEdgesCoreness() {
+        ArrayList<Integer>[] frontierNodes;
+        frontierNodes = new ArrayList[numPartitions];
+        for (int i = 0; i < frontierNodes.length; i++) {
+            frontierNodes[i] = new ArrayList<Integer>();
+        }
+
+        for (FrontierEdgeDb fe : frontierEdges) {
+            Integer part1 = nodeToPartition.get(fe.node1);
+            frontierNodes[part1].add(fe.node1);
+            Integer part2 = nodeToPartition.get(fe.node2);
+            frontierNodes[part2].add(fe.node2);
+        }
+        for (int i = 0; i < frontierNodes.length; i++) {
+
+            ActorRef worker2 = partitionToActor.get(i);
+
+            worker2.tell(new CorenessQuery(frontierNodes[i]), getSelf());
         }
     }
 
@@ -163,11 +180,4 @@ public class Master extends UntypedActor {
     }
 
 
-    private HashSet<Integer> pruneCandidateNodes(HashSet<Integer> candidateNodes) {
-        boolean changed = false;
-        for (int node : candidateNodes) {
-            int count = 0;
-            
-        }
-    }
 }
