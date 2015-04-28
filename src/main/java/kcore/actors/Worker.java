@@ -92,18 +92,20 @@ public class Worker extends UntypedActor {
         return ret;
     }
 
-    public void getReachableNodes(int node, int coreness, HashSet<Integer> ret) {
+    private void getReachableNodes(int node, int coreness, HashSet<Integer> ret) {
         if (corenessTable[node] == coreness && !ret.contains(node)) {
             ret.add(node);
             for (int neighNode : graph.neighbors(node).getA()) {
                 getReachableNodes(neighNode, coreness, ret);
             }
+            //TODO check remote neighbours
         }
     }
 
 
     private HashSet<Integer> pruneCandidateNodes(HashSet<Integer> candidateNodes) {
         boolean changed = false;
+        HashSet<Integer> removed = new HashSet<Integer>();
         for (int node : candidateNodes) {
             int count = 0;
             for (int neighbour : graph.neighbors(node).getA()) {
@@ -112,12 +114,13 @@ public class Worker extends UntypedActor {
                 }
             }
             //TODO check previous frontier edges
-            if (count < corenessTable[node]) {
+            if (count <= corenessTable[node]) {
                 changed = true;
-                candidateNodes.remove(node);
+                removed.add(node);
             }
         }
         if (changed) {
+            candidateNodes.removeAll(removed);
             candidateNodes = pruneCandidateNodes(candidateNodes);
         }
         return candidateNodes;

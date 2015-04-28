@@ -33,7 +33,11 @@ public final class IntArray {
     }
 
     public int[] getA() {
-        return A;
+        int[] ret = new int[size];
+        for (int i = 0; i < A.length && i < size; i++) {
+            ret[i] = A[i];
+        }
+        return ret;
     }
 
     public Object clone() {
