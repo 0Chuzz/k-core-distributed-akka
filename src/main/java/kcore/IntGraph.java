@@ -1,9 +1,11 @@
 package kcore;
 
+import kcore.structures.Graph;
+
 import java.util.Hashtable;
 import java.util.Vector;
 
-public class IntGraph {
+public class IntGraph extends Graph {
 
     public Vector<Integer> frontierNodes;
 //private int startFrom; 

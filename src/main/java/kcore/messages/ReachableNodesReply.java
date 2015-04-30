@@ -1,18 +1,21 @@
 package kcore.messages;
 
+import kcore.structures.GraphWithCandidateSet;
+
 import java.io.Serializable;
-import java.util.HashSet;
 
 /**
  * Created by chuzz on 4/21/15.
  */
 public class ReachableNodesReply implements Serializable {
-    public final HashSet<Integer> reachableNodes;
+    public final GraphWithCandidateSet graph;
     public final int partition, node, coreness;
 
-    public ReachableNodesReply(HashSet<Integer> reachableNodes, int partition, int node, int coreness) {
-        this.reachableNodes = reachableNodes;
-        this.partition = partition;
+
+    public ReachableNodesReply(GraphWithCandidateSet reachableSubgraph, int partitionId, int node, int coreness) {
+
+        graph = reachableSubgraph;
+        partition = partitionId;
         this.node = node;
         this.coreness = coreness;
     }

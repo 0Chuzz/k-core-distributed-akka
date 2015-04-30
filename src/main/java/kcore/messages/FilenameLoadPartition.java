@@ -1,8 +1,9 @@
 package kcore.messages;
 
-import kcore.DistKCore;
-import kcore.IntGraph;
+import kcore.structures.Graph;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 
 /**
@@ -19,9 +20,22 @@ public class FilenameLoadPartition extends LoadPartition {
     }
 
     @Override
-    public IntGraph getPartition() {
+    public Graph getPartition() {
         try {
-            return DistKCore.graphConstruction(filename);
+            //int startFrom;
+            String line;
+
+            BufferedReader reader = new BufferedReader(new FileReader(filename));
+
+            Graph gr = new Graph();
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split("\\s");
+                gr.addEdge(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
+            }
+
+            reader.close();
+            return gr;
+
         } catch (IOException e) {
             e.printStackTrace();
             return null;

@@ -2,6 +2,7 @@ package kcore.messages;
 
 import kcore.DistKCore;
 import kcore.IntGraph;
+import kcore.structures.Graph;
 
 import java.io.IOException;
 
@@ -21,7 +22,7 @@ public class DirectLoadPartition extends LoadPartition {
     }
 
     @Override
-    public IntGraph getPartition() {
+    public Graph getPartition() {
         return graph;
     }
 

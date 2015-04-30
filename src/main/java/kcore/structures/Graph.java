@@ -1,0 +1,69 @@
+package kcore.structures;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
+/**
+ * Created by chuzz on 4/29/15.
+ */
+class DefaultHashMap extends HashMap<Integer, HashSet<Integer>> {
+    @Override
+    public HashSet<Integer> get(Object k) {
+        if (!containsKey(k)) {
+            put((Integer) k, new HashSet<Integer>());
+        }
+        return super.get(k);
+
+    }
+}
+
+public class Graph implements Serializable {
+    protected HashSet<Integer> nodes;
+    protected DefaultHashMap edges;
+
+    public Graph() {
+        nodes = new HashSet<Integer>();
+        edges = new DefaultHashMap();
+    }
+
+    public void addNode(int node) {
+        if (!nodes.contains(node)) {
+            nodes.add(node);
+            //edges.put(node, new HashSet<Integer>());
+        }
+    }
+
+    public void addEdge(int node1, int node2) {
+        addNode(node1);
+        addNode(node2);
+        edges.get(node1).add(node2);
+        edges.get(node2).add(node1);
+    }
+
+    public HashSet<Integer> getNeighbours(int node) {
+        return edges.get(node);
+    }
+
+    public void merge(Graph g) {
+        nodes.addAll(g.nodes);
+        for (Map.Entry<Integer, HashSet<Integer>> entry : g.edges.entrySet()) {
+            if (edges.containsKey(entry.getKey())) {
+                edges.get(entry.getKey()).addAll(entry.getValue());
+            } else {
+                edges.put(entry.getKey(), entry.getValue());
+            }
+
+        }
+    }
+
+
+    public boolean contains(int node) {
+        return nodes.contains(node);
+    }
+
+    public HashSet<Integer> getNodes() {
+        return nodes;
+    }
+}

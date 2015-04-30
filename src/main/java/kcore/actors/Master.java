@@ -128,7 +128,7 @@ public class Master extends UntypedActor {
             updateCorenessTable(r);
         } else if (message instanceof ReachableNodesReply) {
             final ReachableNodesReply reply = (ReachableNodesReply) message;
-            log.info("reachable from {} w coreness {} :{}", reply.node, reply.coreness, reply.reachableNodes);
+            log.info("reachable from {} w coreness {} :{}", reply.node, reply.coreness, reply.graph.getCandidateSet());
         }
     }
 
