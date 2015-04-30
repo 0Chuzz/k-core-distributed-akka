@@ -8,7 +8,9 @@ import java.util.HashSet;
 public class GraphWithCandidateSet extends GraphWithCoreness {
     protected HashSet<Integer> candidateSet;
 
-    private GraphWithCandidateSet() {
+    public GraphWithCandidateSet() {
+        super();
+        candidateSet = new HashSet<Integer>();
     }
 
 
@@ -20,7 +22,7 @@ public class GraphWithCandidateSet extends GraphWithCoreness {
         updateCorenessFrom(graph);
     }
 
-    private void pruneCandidateNodes() {
+    public void pruneCandidateNodes() {
         boolean changed = false;
         HashSet<Integer> removed = new HashSet<Integer>();
         for (int node : candidateSet) {
@@ -55,5 +57,11 @@ public class GraphWithCandidateSet extends GraphWithCoreness {
 
     public HashSet<Integer> getCandidateSet() {
         return candidateSet;
+    }
+
+    public void union(GraphWithCandidateSet graph) {
+        this.merge(graph);
+        this.corenessTable.putAll(graph.corenessTable);
+        this.candidateSet.addAll(graph.candidateSet);
     }
 }

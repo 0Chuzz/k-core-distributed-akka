@@ -5,8 +5,8 @@ import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.routing.FromConfig;
-import kcore.IntGraph;
 import kcore.messages.*;
+import kcore.structures.GraphWithCandidateSet;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -21,12 +21,12 @@ class FrontierEdgeDb {
     int node1, node2;
     int coreness1 = -1, coreness2 = -1;
     ActorRef worker1, worker2;
+    GraphWithCandidateSet candidateSet1, candidateSet2;
 }
 public class Master extends UntypedActor {
     ActorRef backend = getContext().actorOf(FromConfig.getInstance().props(),
             "workersRouter");
     LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-    IntGraph graph;
     HashMap<Integer, Integer> nodeToPartition = new HashMap<Integer, Integer>();
     Map<Integer, ActorRef> partitionToActor = new HashMap<Integer, ActorRef>();
     Set<FrontierEdgeDb> frontierEdges = new HashSet<FrontierEdgeDb>();
@@ -42,7 +42,7 @@ public class Master extends UntypedActor {
         corenessReceived = 0;
 
         for (int i = 0; i < totalInstances; i++) {
-            backend.tell(new FilenameLoadPartition("smallfile" + i), getSelf());
+            backend.tell(new FilenameLoadPartition("smallfile" + i, i), getSelf());
         }
     }
 
@@ -128,7 +128,39 @@ public class Master extends UntypedActor {
             updateCorenessTable(r);
         } else if (message instanceof ReachableNodesReply) {
             final ReachableNodesReply reply = (ReachableNodesReply) message;
-            log.info("reachable from {} w coreness {} :{}", reply.node, reply.coreness, reply.graph.getCandidateSet());
+            updateCorenessTable(reply);
+            //log.info("reachable from {} w coreness {} :{}", reply.node, reply.coreness, reply.graph.getCandidateSet());
+        }
+    }
+
+    private void updateCorenessTable(ReachableNodesReply reply) {
+        for (FrontierEdgeDb db : frontierEdges) {
+            boolean updated = false;
+            if (reply.node == db.node1 && db.coreness1 <= db.coreness2) {
+                db.candidateSet1 = reply.graph;
+                updated = true;
+            } else if (reply.node == db.node2 && db.coreness2 <= db.coreness1) {
+                db.candidateSet2 = reply.graph;
+                updated = true;
+            }
+
+
+            if (updated) {
+                GraphWithCandidateSet unionSet = new GraphWithCandidateSet();
+                if (db.coreness1 <= db.coreness2) {
+                    if (db.candidateSet1 == null) continue;
+                    unionSet.union(db.candidateSet1);
+                }
+                if (db.coreness2 <= db.coreness1) {
+                    if (db.candidateSet2 == null) continue;
+                    unionSet.union(db.candidateSet2);
+                }
+                unionSet.pruneCandidateNodes();
+                // TODO: update coreness
+                log.info("nodes to be updated: {}", unionSet.getCandidateSet());
+
+            }
+
         }
     }
 
