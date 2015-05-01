@@ -6,6 +6,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.routing.FromConfig;
 import kcore.messages.*;
+import kcore.structures.FrontierEdgeDb;
 import kcore.structures.GraphWithCandidateSet;
 
 import java.io.File;
@@ -17,12 +18,7 @@ import java.util.*;
 /**
  * Created by Stefano on 09/03/2015.
  */
-class FrontierEdgeDb {
-    int node1, node2;
-    int coreness1 = -1, coreness2 = -1;
-    ActorRef worker1, worker2;
-    GraphWithCandidateSet candidateSet1, candidateSet2;
-}
+
 public class Master extends UntypedActor {
     ActorRef backend = getContext().actorOf(FromConfig.getInstance().props(),
             "workersRouter");
@@ -114,33 +110,28 @@ public class Master extends UntypedActor {
         log.debug(message.toString());
 
         if (message instanceof CorenessState) {
-            final CorenessState coreness = (CorenessState) message;
-            if (++corenessReceived == numPartitions) {
-                getAllFrontierEdgesCoreness();
-            }
-            log.debug("received {} replies", corenessReceived);
+            handleCorenessState((CorenessState) message);
 
         } else if (message instanceof NewPartitionActor) {
-            final NewPartitionActor pa = (NewPartitionActor) message;
-            partitionToActor.put(pa.getId(), pa.getActorRef());
+            handleNewPartitionActor((NewPartitionActor) message);
+
         } else if (message instanceof CorenessReply) {
-            final CorenessReply r = (CorenessReply) message;
-            updateCorenessTable(r);
+            handleCorenessReply((CorenessReply) message);
+
         } else if (message instanceof ReachableNodesReply) {
-            final ReachableNodesReply reply = (ReachableNodesReply) message;
-            updateCorenessTable(reply);
-            //log.info("reachable from {} w coreness {} :{}", reply.node, reply.coreness, reply.graph.getCandidateSet());
+            handleReachableNodesReply((ReachableNodesReply) message);
+
         }
     }
 
-    private void updateCorenessTable(ReachableNodesReply reply) {
+    private void handleReachableNodesReply(ReachableNodesReply message) {
         for (FrontierEdgeDb db : frontierEdges) {
             boolean updated = false;
-            if (reply.node == db.node1 && db.coreness1 <= db.coreness2) {
-                db.candidateSet1 = reply.graph;
+            if (message.node == db.node1 && db.coreness1 <= db.coreness2) {
+                db.candidateSet1 = message.graph;
                 updated = true;
-            } else if (reply.node == db.node2 && db.coreness2 <= db.coreness1) {
-                db.candidateSet2 = reply.graph;
+            } else if (message.node == db.node2 && db.coreness2 <= db.coreness1) {
+                db.candidateSet2 = message.graph;
                 updated = true;
             }
 
@@ -156,22 +147,23 @@ public class Master extends UntypedActor {
                     unionSet.union(db.candidateSet2);
                 }
                 unionSet.pruneCandidateNodes();
-                // TODO: update coreness
                 log.info("nodes to be updated: {}", unionSet.getCandidateSet());
-
+                NewFrontierEdge msg = new NewFrontierEdge(db.node1, db.node2, unionSet.getCandidateSet());
+                db.worker1.tell(msg, getSelf());
+                db.worker2.tell(msg, getSelf());
             }
 
         }
     }
 
-    private void updateCorenessTable(CorenessReply r) {
+    private void handleCorenessReply(CorenessReply message) {
         for (FrontierEdgeDb db : frontierEdges) {
-            if (r.map.containsKey(db.node1)) {
-                db.coreness1 = r.map.get(db.node1);
+            if (message.map.containsKey(db.node1)) {
+                db.coreness1 = message.map.get(db.node1);
                 db.worker1 = getSender();
             }
-            if (r.map.containsKey(db.node2)) {
-                db.coreness2 = r.map.get(db.node2);
+            if (message.map.containsKey(db.node2)) {
+                db.coreness2 = message.map.get(db.node2);
                 db.worker2 = getSender();
             }
 
@@ -179,6 +171,17 @@ public class Master extends UntypedActor {
                 this.getReachableNodes(db);
             }
         }
+    }
+
+    private void handleNewPartitionActor(NewPartitionActor message) {
+        partitionToActor.put(message.getId(), message.getActorRef());
+    }
+
+    private void handleCorenessState(CorenessState message) {
+        if (++corenessReceived == numPartitions) {
+            getAllFrontierEdgesCoreness();
+        }
+        log.debug("received {} replies", corenessReceived);
     }
 
     private void getAllFrontierEdgesCoreness() {

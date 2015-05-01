@@ -2,22 +2,23 @@ package kcore.structures;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * Created by chuzz on 4/29/15.
  */
 public class GraphWithCoreness extends Graph {
-    protected HashMap<Integer, Integer> corenessTable;
+    protected CorenessMap corenessTable;
 
     GraphWithCoreness() {
         super();
-        corenessTable = new HashMap<Integer, Integer>();
+        corenessTable = new CorenessMap();
     }
 
     public GraphWithCoreness(Graph g) {
         this.nodes = g.nodes;
         this.edges = g.edges;
-        corenessTable = new HashMap<Integer, Integer>();
+        corenessTable = new CorenessMap();
         calculateCoreness();
     }
 
@@ -132,6 +133,14 @@ public class GraphWithCoreness extends Graph {
     public void updateCorenessFrom(GraphWithCoreness graph) {
         for (int node : nodes) {
             corenessTable.put(node, graph.getCoreness(node));
+        }
+    }
+
+    public void updateCorenessFrom(HashSet<Integer> toBeUpdated) {
+        for (int node : toBeUpdated) {
+            if (corenessTable.containsKey(node)) {
+                corenessTable.put(node, corenessTable.get(node) + 1);
+            }
         }
     }
 }

@@ -31,29 +31,45 @@ public class Worker extends UntypedActor {
     public void onReceive(Object message) throws Exception {
         log.debug(message.toString());
         if (message instanceof LoadPartition) {
-            final LoadPartition msg = (LoadPartition) message;
-            partitionId = msg.getPartitionId();
-            //final String graphFile = "graphFile" + Integer.toString(msg.getPartitionId());
-            graph = new GraphWithCoreness(msg.getPartition());
-
-
-            log.info("partial coreness" + corenessToString());
-            CorenessState corenessState;
-            corenessState = new CorenessState(msg.getPartitionId());
-            getSender().tell(corenessState, getSelf());
+            handleLoadPartition((LoadPartition) message);
 
         } else if (message instanceof CorenessQuery) {
-            final CorenessQuery query = (CorenessQuery) message;
-            sendCorenessReply(query);
+            sendCorenessReply((CorenessQuery) message);
 
         } else if (message instanceof ReachableNodesQuery) {
-            final ReachableNodesQuery query = (ReachableNodesQuery) message;
-            int node = query.node;
-            int coreness = graph.getCoreness(node);
-            GraphWithCandidateSet reachSub = new GraphWithCandidateSet(graph, node);
+            handleReachableNodesQuery((ReachableNodesQuery) message);
 
-            getSender().tell(new ReachableNodesReply(reachSub, partitionId, node, coreness), getSelf());
+        } else if (message instanceof NewFrontierEdge) {
+            handleNewFrontierEdge((NewFrontierEdge) message);
         }
+    }
+
+    private void handleNewFrontierEdge(NewFrontierEdge message) {
+        final NewFrontierEdge frontierEdge = message;
+        graph.addEdge(frontierEdge.node1, frontierEdge.node2);
+        graph.updateCorenessFrom(frontierEdge.toBeUpdated);
+    }
+
+    private void handleReachableNodesQuery(ReachableNodesQuery message) {
+        final ReachableNodesQuery query = message;
+        int node = query.node;
+        int coreness = graph.getCoreness(node);
+        GraphWithCandidateSet reachSub = new GraphWithCandidateSet(graph, node);
+
+        getSender().tell(new ReachableNodesReply(reachSub, partitionId, node, coreness), getSelf());
+    }
+
+    private void handleLoadPartition(LoadPartition message) {
+        final LoadPartition msg = message;
+        partitionId = msg.getPartitionId();
+        //final String graphFile = "graphFile" + Integer.toString(msg.getPartitionId());
+        graph = new GraphWithCoreness(msg.getPartition());
+
+
+        log.info("partial coreness" + corenessToString());
+        CorenessState corenessState;
+        corenessState = new CorenessState(msg.getPartitionId());
+        getSender().tell(corenessState, getSelf());
     }
 
     private void sendCorenessReply(CorenessQuery query) {

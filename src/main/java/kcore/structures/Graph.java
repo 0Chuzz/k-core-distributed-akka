@@ -1,31 +1,16 @@
 package kcore.structures;
 
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-/**
- * Created by chuzz on 4/29/15.
- */
-class DefaultHashMap extends HashMap<Integer, HashSet<Integer>> {
-    @Override
-    public HashSet<Integer> get(Object k) {
-        if (!containsKey(k)) {
-            put((Integer) k, new HashSet<Integer>());
-        }
-        return super.get(k);
-
-    }
-}
-
 public class Graph implements Serializable {
     protected HashSet<Integer> nodes;
-    protected DefaultHashMap edges;
+    protected EdgesMap edges;
 
     public Graph() {
         nodes = new HashSet<Integer>();
-        edges = new DefaultHashMap();
+        edges = new EdgesMap();
     }
 
     public void addNode(int node) {
