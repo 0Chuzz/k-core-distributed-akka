@@ -132,7 +132,8 @@ public class GraphWithCoreness extends Graph {
 
     public void updateCorenessFrom(GraphWithCoreness graph) {
         for (int node : nodes) {
-            corenessTable.put(node, graph.getCoreness(node));
+            if (graph.getCoreness(node) > 0)
+                corenessTable.put(node, graph.getCoreness(node));
         }
     }
 

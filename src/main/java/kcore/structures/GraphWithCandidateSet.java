@@ -32,7 +32,6 @@ public class GraphWithCandidateSet extends GraphWithCoreness {
                     count++;
                 }
             }
-            //TODO check previous frontier edges
             if (count <= corenessTable.get(node)) {
                 changed = true;
                 removed.add(node);

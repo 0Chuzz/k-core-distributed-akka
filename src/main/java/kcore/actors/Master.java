@@ -149,6 +149,14 @@ public class Master extends UntypedActor {
                 unionSet.pruneCandidateNodes();
                 log.info("nodes to be updated: {}", unionSet.getCandidateSet());
                 NewFrontierEdge msg = new NewFrontierEdge(db.node1, db.node2, unionSet.getCandidateSet());
+                for (FrontierEdgeDb db2 : frontierEdges) {
+                    if (unionSet.getCandidateSet().contains(db2.node1)) {
+                        db2.coreness1++;
+                    }
+                    if (unionSet.getCandidateSet().contains(db2.node2)) {
+                        db2.coreness2++;
+                    }
+                }
                 db.worker1.tell(msg, getSelf());
                 db.worker2.tell(msg, getSelf());
             }
