@@ -16,6 +16,10 @@ public class GraphWithCandidateSet extends GraphWithCoreness {
 
     public GraphWithCandidateSet(GraphWithCoreness graph, int node) {
         super();
+        if (graph.getcorenessTable().size() != graph.getNodes().size()) {
+            //break
+            int nul = 1 + 1;
+        }
         candidateSet = new HashSet<Integer>();
         int coreness = graph.getCoreness(node);
         recursiveTraverse(graph, node, coreness);

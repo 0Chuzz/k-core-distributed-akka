@@ -14,10 +14,7 @@ public class Graph implements Serializable {
     }
 
     public void addNode(int node) {
-        if (!nodes.contains(node)) {
             nodes.add(node);
-            //edges.put(node, new HashSet<Integer>());
-        }
     }
 
     public void addEdge(int node1, int node2) {
@@ -34,11 +31,11 @@ public class Graph implements Serializable {
     public void merge(Graph g) {
         nodes.addAll(g.nodes);
         for (Map.Entry<Integer, HashSet<Integer>> entry : g.edges.entrySet()) {
-            if (edges.containsKey(entry.getKey())) {
+            //if (edges.containsKey(entry.getKey())) {
                 edges.get(entry.getKey()).addAll(entry.getValue());
-            } else {
-                edges.put(entry.getKey(), entry.getValue());
-            }
+            //} else {
+            //    edges.put(entry.getKey(), entry.getValue());
+            //}
 
         }
     }

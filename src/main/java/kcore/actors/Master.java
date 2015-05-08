@@ -2,6 +2,8 @@ package kcore.actors;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
+import akka.cluster.Cluster;
+import akka.dispatch.sysmsg.Terminate;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.routing.FromConfig;
@@ -25,7 +27,7 @@ public class Master extends UntypedActor {
     LoggingAdapter log = Logging.getLogger(getContext().system(), this);
     HashMap<Integer, Integer> nodeToPartition = new HashMap<Integer, Integer>();
     Map<Integer, ActorRef> partitionToActor = new HashMap<Integer, ActorRef>();
-    Set<FrontierEdgeDb> frontierEdges = new HashSet<FrontierEdgeDb>();
+    List<FrontierEdgeDb> frontierEdges = new ArrayList<FrontierEdgeDb>();
     int numPartitions, corenessReceived;
 
 
@@ -125,60 +127,78 @@ public class Master extends UntypedActor {
     }
 
     private void handleReachableNodesReply(ReachableNodesReply message) {
-        for (FrontierEdgeDb db : frontierEdges) {
-            boolean updated = false;
-            if (message.node == db.node1 && db.coreness1 <= db.coreness2) {
-                db.candidateSet1 = message.graph;
-                updated = true;
-            } else if (message.node == db.node2 && db.coreness2 <= db.coreness1) {
-                db.candidateSet2 = message.graph;
-                updated = true;
+        //for (FrontierEdgeDb db : frontierEdges) {
+        FrontierEdgeDb db = frontierEdges.get(0);
+        boolean updated = false;
+        if (message.node == db.node1 && db.coreness1 <= db.coreness2) {
+            db.candidateSet1 = message.graph;
+            updated = true;
+        } else if (message.node == db.node2 && db.coreness2 <= db.coreness1) {
+            db.candidateSet2 = message.graph;
+            updated = true;
+        }
+
+
+        if (updated) {
+            GraphWithCandidateSet unionSet = new GraphWithCandidateSet();
+            if (db.coreness1 <= db.coreness2) {
+                if (db.candidateSet1 == null) return;
+                unionSet.union(db.candidateSet1);
+            }
+            if (db.coreness2 <= db.coreness1) {
+                if (db.candidateSet2 == null) return;
+                unionSet.union(db.candidateSet2);
             }
 
-
-            if (updated) {
-                GraphWithCandidateSet unionSet = new GraphWithCandidateSet();
-                if (db.coreness1 <= db.coreness2) {
-                    if (db.candidateSet1 == null) continue;
-                    unionSet.union(db.candidateSet1);
-                }
-                if (db.coreness2 <= db.coreness1) {
-                    if (db.candidateSet2 == null) continue;
-                    unionSet.union(db.candidateSet2);
-                }
-                unionSet.pruneCandidateNodes();
-                log.info("nodes to be updated: {}", unionSet.getCandidateSet());
-                NewFrontierEdge msg = new NewFrontierEdge(db.node1, db.node2, unionSet.getCandidateSet());
-                for (FrontierEdgeDb db2 : frontierEdges) {
+            unionSet.pruneCandidateNodes();
+            log.info("nodes to be updated: {}", unionSet.getCandidateSet());
+            NewFrontierEdge msg = new NewFrontierEdge(db.node1, db.node2, unionSet.getCandidateSet());
+                /*for (FrontierEdgeDb db2 : frontierEdges) {
                     if (unionSet.getCandidateSet().contains(db2.node1)) {
                         db2.coreness1++;
                     }
                     if (unionSet.getCandidateSet().contains(db2.node2)) {
                         db2.coreness2++;
                     }
-                }
-                db.worker1.tell(msg, getSelf());
-                db.worker2.tell(msg, getSelf());
+                }*/
+            db.worker1.tell(msg, getSelf());
+            db.worker2.tell(msg, getSelf());
+            frontierEdges.remove(0);
+            if (frontierEdges.size() > 0) {
+                this.getFirstFrontierEdgesCoreness();
+            } else {
+                this.handleEndOfAlgorithm();
             }
 
         }
+
+        //}
+    }
+
+    private void handleEndOfAlgorithm() {
+        log.info("finished");
+        for (ActorRef w : partitionToActor.values()) {
+            w.tell(new Terminate(), getSelf());
+        }
+        Cluster.get(getContext().system()).shutdown();
     }
 
     private void handleCorenessReply(CorenessReply message) {
-        for (FrontierEdgeDb db : frontierEdges) {
-            if (message.map.containsKey(db.node1)) {
-                db.coreness1 = message.map.get(db.node1);
-                db.worker1 = getSender();
-            }
-            if (message.map.containsKey(db.node2)) {
-                db.coreness2 = message.map.get(db.node2);
-                db.worker2 = getSender();
-            }
-
-            if (db.coreness1 != -1 && db.coreness2 != -1) {
-                this.getReachableNodes(db);
-            }
+        //for (FrontierEdgeDb db : frontierEdges) {
+        FrontierEdgeDb db = frontierEdges.get(0);
+        if (message.map.containsKey(db.node1)) {
+            db.coreness1 = message.map.get(db.node1);
+            db.worker1 = getSender();
         }
+        if (message.map.containsKey(db.node2)) {
+            db.coreness2 = message.map.get(db.node2);
+            db.worker2 = getSender();
+        }
+
+        if (db.coreness1 != -1 && db.coreness2 != -1) {
+            this.getReachableNodes(db);
+        }
+        //}
     }
 
     private void handleNewPartitionActor(NewPartitionActor message) {
@@ -186,10 +206,27 @@ public class Master extends UntypedActor {
     }
 
     private void handleCorenessState(CorenessState message) {
-        if (++corenessReceived == numPartitions) {
-            getAllFrontierEdgesCoreness();
+        corenessReceived++;
+        if (corenessReceived == numPartitions) {
+            getFirstFrontierEdgesCoreness();
         }
-        log.debug("received {} replies", corenessReceived);
+        log.info("received {} replies", corenessReceived);
+    }
+
+    private void getFirstFrontierEdgesCoreness() {
+        FrontierEdgeDb db = frontierEdges.get(0);
+        ArrayList<Integer> nodes;
+        ActorRef actorRef;
+
+        actorRef = partitionToActor.get(nodeToPartition.get(db.node1));
+        nodes = new ArrayList<Integer>();
+        nodes.add(db.node1);
+        actorRef.tell(new CorenessQuery(nodes), getSelf());
+
+        actorRef = partitionToActor.get(nodeToPartition.get(db.node2));
+        nodes = new ArrayList<Integer>();
+        nodes.add(db.node2);
+        actorRef.tell(new CorenessQuery(nodes), getSelf());
     }
 
     private void getAllFrontierEdgesCoreness() {

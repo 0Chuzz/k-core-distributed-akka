@@ -28,6 +28,11 @@ public class Worker extends UntypedActor {
     }
 
     @Override
+    public void postStop() {
+        log.info("final coreness: {}", corenessToString());
+    }
+
+    @Override
     public void onReceive(Object message) throws Exception {
         log.debug(message.toString());
         if (message instanceof LoadPartition) {
@@ -75,7 +80,8 @@ public class Worker extends UntypedActor {
     private void sendCorenessReply(CorenessQuery query) {
         HashMap<Integer, Integer> replymap = new HashMap<Integer, Integer>();
         for (int node : query.node1) {
-            replymap.put(node, graph.getCoreness(node));
+            if (graph.contains(node))
+                replymap.put(node, graph.getCoreness(node));
 
         }
         getSender().tell(new CorenessReply(replymap, partitionId), getSelf());
