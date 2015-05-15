@@ -87,7 +87,7 @@ public class Worker extends UntypedActor {
                 replymap.put(node, graph.getCoreness(node));
 
         }
-        getSender().tell(new CorenessReply(replymap, partitionId), getSelf());
+        getSender().tell(new CorenessReply(replymap), getSelf());
     }
 
 

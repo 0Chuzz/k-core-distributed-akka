@@ -8,17 +8,12 @@ import java.util.HashMap;
  */
 public class CorenessReply implements Serializable {
     //public int[] node, coreness;
+    /**
+     * map from node to respective coreness
+     */
     public HashMap<Integer, Integer> map;
-    public int partition;
 
-    /*public CorenessReply(int[] node1, int[] coreness, int partition) {
-        node = node1;
-        this.coreness = coreness;
-        this.partition = partition;
-    }*/
-
-    public CorenessReply(HashMap<Integer, Integer> replymap, int partitionId) {
+    public CorenessReply(HashMap<Integer, Integer> replymap) {
         map = replymap;
-        partition = partitionId;
     }
 }

@@ -10,7 +10,13 @@ import java.io.IOException;
  * Created by Stefano on 16/03/2015.
  */
 public class FilenameLoadPartition extends LoadPartition {
+    /**
+     * filename that will be loaded
+     */
     private String filename;
+    /**
+     * id of the partition
+     */
     private int partitionId;
 
     public FilenameLoadPartition(String filename, int partitionId) {
