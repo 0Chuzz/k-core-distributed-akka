@@ -52,6 +52,9 @@ public class Worker extends UntypedActor {
     private void handleNewFrontierEdge(NewFrontierEdge message) {
         final NewFrontierEdge frontierEdge = message;
         graph.addEdge(frontierEdge.node1, frontierEdge.node2);
+        HashMap<Integer, Integer> table = graph.getcorenessTable();
+        table.put(frontierEdge.node1, frontierEdge.coreness1);
+        table.put(frontierEdge.node2, frontierEdge.coreness2);
         graph.updateCorenessFrom(frontierEdge.toBeUpdated);
     }
 
