@@ -25,7 +25,7 @@ public class Master extends UntypedActor {
             "workersRouter");
     LoggingAdapter log = Logging.getLogger(getContext().system(), this);
     HashMap<Integer, Integer> nodeToPartition = new HashMap<Integer, Integer>();
-    Map<Integer, ActorRef> partitionToActor = new HashMap<Integer, ActorRef>();
+    HashMap<Integer, ActorRef> partitionToActor = new HashMap<Integer, ActorRef>();
     List<FrontierEdgeDb> frontierEdges = new ArrayList<FrontierEdgeDb>();
     int numPartitions, corenessReceived;
 
@@ -34,7 +34,7 @@ public class Master extends UntypedActor {
     public void preStart() {
         log.debug("Master starting");
         // start work
-        int totalInstances = splitPartitionFiles("graphfile", "singlefile");
+        int totalInstances = splitPartitionFiles("graphfile", "partfile");
         numPartitions = totalInstances;
         corenessReceived = 0;
 
@@ -148,9 +148,13 @@ public class Master extends UntypedActor {
                 if (db.candidateSet2 == null) return;
                 unionSet.union(db.candidateSet2);
             }
+            unionSet.addEdge(db.node1, db.node2);
+            unionSet.getcorenessTable().put(db.node1, db.coreness1);
+            unionSet.getcorenessTable().put(db.node2, db.coreness2);
+
 
             unionSet.pruneCandidateNodes();
-            log.info("nodes to be updated: {}", unionSet.getCandidateSet());
+            log.info("frontier edge {}-{}: toBeUpdated: {}", db.node1, db.node2, unionSet.getCandidateSet());
             NewFrontierEdge msg = new NewFrontierEdge(db.node1, db.node2, db.coreness1, db.coreness2, unionSet.getCandidateSet());
             NewFrontierEdge msg2 = new NewFrontierEdge(db.node1, db.node2, db.coreness1, db.coreness2, unionSet.getCandidateSet());
 
