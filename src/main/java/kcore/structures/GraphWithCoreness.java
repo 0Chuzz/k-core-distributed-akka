@@ -7,18 +7,20 @@ import java.util.HashSet;
 /**
  * Created by chuzz on 4/29/15.
  */
-public class GraphWithCoreness extends Graph {
-    protected CorenessMap corenessTable;
+public class GraphWithCoreness extends GraphWithRemoteNodes {
+    protected HashMap<Integer, Integer> corenessTable;
 
     GraphWithCoreness() {
         super();
-        corenessTable = new CorenessMap();
+        corenessTable = new HashMap<Integer, Integer>();
     }
 
     public GraphWithCoreness(Graph g) {
         this.nodes = g.nodes;
         this.edges = g.edges;
-        corenessTable = new CorenessMap();
+        this.remoteEdges = new HashMap<Integer, HashSet<Integer>>();
+        this.remoteNodes = new HashSet<Integer>();
+        corenessTable = new HashMap<Integer, Integer>();
         calculateCoreness();
     }
 
@@ -38,9 +40,9 @@ public class GraphWithCoreness extends Graph {
             out1.writeInt(size1);
             for (int i = 0; i < size1; i++) {
                 out1.writeInt(i);
-                int degree = this.edges.get(i).size();
+                int degree = edges.containsKey(i) ? this.edges.get(i).size() : 0;
                 out1.writeInt(degree);
-                for (int j : this.edges.get(i)) {
+                if (degree > 0) for (int j : this.edges.get(i)) {
                     out1.writeInt(j);
                 }
             }
@@ -132,7 +134,7 @@ public class GraphWithCoreness extends Graph {
 
     public void updateCorenessFrom(GraphWithCoreness graph) {
         for (int node : nodes) {
-            if (graph.getCoreness(node) > 0)
+            if (graph.contains(node) || graph.isRemote(node))
                 corenessTable.put(node, graph.getCoreness(node));
         }
     }
@@ -143,5 +145,15 @@ public class GraphWithCoreness extends Graph {
                 corenessTable.put(node, corenessTable.get(node) + 1);
             }
         }
+    }
+
+    public void merge(GraphWithCoreness g) {
+        super.merge(g);
+        corenessTable.putAll(g.corenessTable);
+    }
+
+    public void addRemoteEdge(int localNode, int remoteNode, int remoteCoreness) {
+        super.addRemoteEdge(localNode, remoteNode);
+        corenessTable.put(remoteNode, remoteCoreness);
     }
 }

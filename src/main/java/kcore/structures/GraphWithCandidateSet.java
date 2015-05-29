@@ -7,20 +7,25 @@ import java.util.HashSet;
  */
 public class GraphWithCandidateSet extends GraphWithCoreness {
     protected HashSet<Integer> candidateSet;
+    protected HashSet<Integer> candidateRemotes;
+    protected HashSet<Integer> toBeUpdated = null;
 
     public GraphWithCandidateSet() {
         super();
         candidateSet = new HashSet<Integer>();
+        candidateRemotes = new HashSet<Integer>();
     }
 
 
     public GraphWithCandidateSet(GraphWithCoreness graph, int node) {
         super();
         candidateSet = new HashSet<Integer>();
-        int coreness = graph.getCoreness(node);
-        recursiveTraverse(graph, node, coreness);
+        candidateRemotes = new HashSet<Integer>();
+        assert !graph.isRemote(node);
+        recursiveTraverse(graph, node);
         updateCorenessFrom(graph);
     }
+
 
     public void pruneCandidateNodes() {
         boolean changed = false;
@@ -43,13 +48,18 @@ public class GraphWithCandidateSet extends GraphWithCoreness {
         }
     }
 
-    private void recursiveTraverse(GraphWithCoreness g, int node, int coreness) {
+    private void recursiveTraverse(GraphWithCoreness g, int node) {
         if (candidateSet.contains(node)) return;
         candidateSet.add(node);
         for (int neighNode : g.getNeighbours(node)) {
-            addEdge(node, neighNode);
-            if (g.getCoreness(neighNode) == coreness) {
-                recursiveTraverse(g, neighNode, coreness);
+            if (g.isRemote(neighNode)) {
+                candidateRemotes.add(neighNode);
+                addRemoteEdge(node, neighNode);
+            } else {
+                addEdge(node, neighNode);
+                if (g.getCoreness(neighNode) == g.getCoreness(node)) {
+                    recursiveTraverse(g, neighNode);
+                }
             }
         }
     }
@@ -58,9 +68,32 @@ public class GraphWithCandidateSet extends GraphWithCoreness {
         return candidateSet;
     }
 
-    public void union(GraphWithCandidateSet graph) {
-        this.merge(graph);
-        this.corenessTable.putAll(graph.corenessTable);
+    public HashSet<Integer> getRemoteCandidates() {
+        return candidateRemotes;
+    }
+
+    public void merge(GraphWithCandidateSet graph) {
+        super.merge(graph);
         this.candidateSet.addAll(graph.candidateSet);
+        this.candidateRemotes.addAll(graph.candidateRemotes);
+        this.candidateRemotes.removeAll(candidateSet);
+    }
+
+    public boolean waitingForRemote(int node) {
+        return candidateRemotes.contains(node);
+    }
+
+    public boolean waitingForRemote() {
+        return candidateRemotes.size() > 0;
+    }
+
+    public HashSet<Integer> getPrunedSet() {
+        if (toBeUpdated == null) {
+            HashSet<Integer> oldCandidateSet = new HashSet<Integer>(candidateSet);
+            pruneCandidateNodes();
+            toBeUpdated = candidateSet;
+            candidateSet = oldCandidateSet;
+        }
+        return toBeUpdated;
     }
 }

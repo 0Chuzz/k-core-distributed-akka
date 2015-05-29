@@ -1,20 +1,23 @@
 package kcore.structures;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
 public class Graph implements Serializable {
     protected HashSet<Integer> nodes;
-    protected EdgesMap edges;
+    protected HashMap<Integer, HashSet<Integer>> edges;
 
     public Graph() {
         nodes = new HashSet<Integer>();
-        edges = new EdgesMap();
+        edges = new HashMap<Integer, HashSet<Integer>>();
     }
 
     public void addNode(int node) {
-            nodes.add(node);
+        assert !nodes.contains(node);
+        nodes.add(node);
+        edges.put(node, new HashSet<Integer>());
     }
 
     public void addEdge(int node1, int node2) {
@@ -31,15 +34,13 @@ public class Graph implements Serializable {
     public void merge(Graph g) {
         nodes.addAll(g.nodes);
         for (Map.Entry<Integer, HashSet<Integer>> entry : g.edges.entrySet()) {
-            //if (edges.containsKey(entry.getKey())) {
+            if (edges.containsKey(entry.getKey())) {
                 edges.get(entry.getKey()).addAll(entry.getValue());
-            //} else {
-            //    edges.put(entry.getKey(), entry.getValue());
-            //}
-
+            } else {
+                edges.put(entry.getKey(), entry.getValue());
+            }
         }
     }
-
 
     public boolean contains(int node) {
         return nodes.contains(node);

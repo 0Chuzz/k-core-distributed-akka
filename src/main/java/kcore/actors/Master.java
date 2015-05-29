@@ -7,7 +7,8 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.routing.FromConfig;
 import kcore.messages.*;
-import kcore.structures.FrontierEdgeDb;
+import kcore.structures.FrontierEdge;
+import kcore.structures.FrontierEdgeDatabase;
 import kcore.structures.GraphWithCandidateSet;
 
 import java.io.File;
@@ -26,7 +27,7 @@ public class Master extends UntypedActor {
     LoggingAdapter log = Logging.getLogger(getContext().system(), this);
     HashMap<Integer, Integer> nodeToPartition = new HashMap<Integer, Integer>();
     HashMap<Integer, ActorRef> partitionToActor = new HashMap<Integer, ActorRef>();
-    List<FrontierEdgeDb> frontierEdges = new ArrayList<FrontierEdgeDb>();
+    FrontierEdgeDatabase frontierEdges = new FrontierEdgeDatabase();
     int numPartitions, corenessReceived;
 
 
@@ -89,7 +90,7 @@ public class Master extends UntypedActor {
                     e.printStackTrace();
                 }
             } else {
-                FrontierEdgeDb e = new FrontierEdgeDb();
+                FrontierEdge e = new FrontierEdge();
                 e.node1 = node1;
                 e.node2 = node2;
                 frontierEdges.add(e);
@@ -127,48 +128,26 @@ public class Master extends UntypedActor {
 
     private void handleReachableNodesReply(ReachableNodesReply message) {
         //for (FrontierEdgeDb db : frontierEdges) {
-        FrontierEdgeDb db = frontierEdges.get(0);
-        boolean updated = false;
-        if (message.node == db.node1 && db.coreness1 <= db.coreness2) {
-            db.candidateSet1 = message.graph;
-            updated = true;
-        } else if (message.node == db.node2 && db.coreness2 <= db.coreness1) {
-            db.candidateSet2 = message.graph;
-            updated = true;
-        }
+
+        frontierEdges.mergeGraph(message.node, message.graph);
+
+        for (FrontierEdge db : frontierEdges.readyForPruning()) {
+            GraphWithCandidateSet unionSet = db.subgraph;
+
+            HashSet<Integer> candidateSet = unionSet.getCandidateSet();
+            HashSet<Integer> toBeUpdated = unionSet.getPrunedSet();
+            log.info("frontier edge {}-{}: candidateSet: {} toBeUpdated: {}", db.node1, db.node2, candidateSet, toBeUpdated);
 
 
-        if (updated) {
-            GraphWithCandidateSet unionSet = new GraphWithCandidateSet();
-            if (db.coreness1 <= db.coreness2) {
-                if (db.candidateSet1 == null) return;
-                unionSet.union(db.candidateSet1);
-            }
-            if (db.coreness2 <= db.coreness1) {
-                if (db.candidateSet2 == null) return;
-                unionSet.union(db.candidateSet2);
-            }
-            unionSet.addEdge(db.node1, db.node2);
-            unionSet.getcorenessTable().put(db.node1, db.coreness1);
-            unionSet.getcorenessTable().put(db.node2, db.coreness2);
+            NewFrontierEdge msg = new NewFrontierEdge(db.node1, db.node2, db.coreness1, db.coreness2, toBeUpdated);
+            //NewFrontierEdge msg2 = new NewFrontierEdge(db.node1, db.node2, db.coreness1, db.coreness2, toBeUpdated);
+            getOwner(db.node1).tell(msg, getSelf());
+            getOwner(db.node2).tell(msg, getSelf());
+            //db.worker2.tell(msg2, getSelf());
 
+            frontierEdges.remove(db);
+            frontierEdges.incrementLocalCoreness(toBeUpdated);
 
-            unionSet.pruneCandidateNodes();
-            log.info("frontier edge {}-{}: toBeUpdated: {}", db.node1, db.node2, unionSet.getCandidateSet());
-            NewFrontierEdge msg = new NewFrontierEdge(db.node1, db.node2, db.coreness1, db.coreness2, unionSet.getCandidateSet());
-            NewFrontierEdge msg2 = new NewFrontierEdge(db.node1, db.node2, db.coreness1, db.coreness2, unionSet.getCandidateSet());
-
-            db.worker1.tell(msg, getSelf());
-            db.worker2.tell(msg2, getSelf());
-            frontierEdges.remove(0);
-            for (FrontierEdgeDb db2 : frontierEdges) {
-                if (unionSet.getCandidateSet().contains(db2.node1)) {
-                    db2.coreness1++;
-                }
-                if (unionSet.getCandidateSet().contains(db2.node2)) {
-                    db2.coreness2++;
-                }
-            }
 
             tryNextFrontierEdge();
         }
@@ -185,26 +164,17 @@ public class Master extends UntypedActor {
     }
 
     private void handleCorenessReply(CorenessReply message) {
-        for (FrontierEdgeDb db : frontierEdges) {
-        if (message.map.containsKey(db.node1)) {
-            db.coreness1 = message.map.get(db.node1);
-            db.worker1 = getSender();
-        }
-        if (message.map.containsKey(db.node2)) {
-            db.coreness2 = message.map.get(db.node2);
-            db.worker2 = getSender();
-        }
-        }
+
+        frontierEdges.updateCorenessTable(message.map);
+
         tryNextFrontierEdge();
 
     }
 
     private void tryNextFrontierEdge() {
-        if (frontierEdges.size() > 0) {
-            FrontierEdgeDb db = frontierEdges.get(0);
-
-            if (db.coreness1 != -1 && db.coreness2 != -1) {
-                this.getReachableNodes(db);
+        if (frontierEdges.processedEverything()) {
+            for (FrontierEdge db : frontierEdges.readyForCandidateSet()) {
+                this.askReachableNodes(db);
             }
         } else handleEndOfAlgorithm();
 
@@ -229,7 +199,7 @@ public class Master extends UntypedActor {
             frontierNodes[i] = new ArrayList<Integer>();
         }
 
-        for (FrontierEdgeDb fe : frontierEdges) {
+        for (FrontierEdge fe : frontierEdges) {
             Integer part1 = nodeToPartition.get(fe.node1);
             frontierNodes[part1].add(fe.node1);
             Integer part2 = nodeToPartition.get(fe.node2);
@@ -243,14 +213,23 @@ public class Master extends UntypedActor {
         }
     }
 
-    private void getReachableNodes(FrontierEdgeDb db) {
+    private void askReachableNodes(FrontierEdge db) {
         if (db.coreness1 <= db.coreness2) {
-            db.worker1.tell(new ReachableNodesQuery(db.node1, db.coreness1), getSelf());
+            askReachableNodes(db.node1);
         }
         if (db.coreness2 <= db.coreness1) {
-            db.worker2.tell(new ReachableNodesQuery(db.node2, db.coreness2), getSelf());
+            askReachableNodes(db.node2);
         }
     }
 
+    private void askReachableNodes(int node) {
+        ActorRef worker = getOwner(node);
+        worker.tell(new ReachableNodesQuery(node), getSelf());
+    }
+
+    private ActorRef getOwner(int node) {
+        ActorRef worker = partitionToActor.get(nodeToPartition.get(node));
+        return worker;
+    }
 
 }

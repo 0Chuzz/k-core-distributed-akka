@@ -8,7 +8,6 @@ import kcore.structures.GraphWithCandidateSet;
 import kcore.structures.GraphWithCoreness;
 
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by Stefano on 09/03/2015.
@@ -51,10 +50,17 @@ public class Worker extends UntypedActor {
 
     private void handleNewFrontierEdge(NewFrontierEdge message) {
         final NewFrontierEdge frontierEdge = message;
-        graph.addEdge(frontierEdge.node1, frontierEdge.node2);
-        HashMap<Integer, Integer> table = graph.getcorenessTable();
-        table.put(frontierEdge.node1, frontierEdge.coreness1);
-        table.put(frontierEdge.node2, frontierEdge.coreness2);
+        int localEdge, remoteEdge, remoteCoreness;
+        if (graph.contains(frontierEdge.node1)) {
+            localEdge = frontierEdge.node1;
+            remoteEdge = frontierEdge.node2;
+            remoteCoreness = frontierEdge.coreness2;
+        } else {
+            localEdge = frontierEdge.node2;
+            remoteEdge = frontierEdge.node1;
+            remoteCoreness = frontierEdge.coreness1;
+        }
+        graph.addRemoteEdge(localEdge, remoteEdge, remoteCoreness);
         graph.updateCorenessFrom(frontierEdge.toBeUpdated);
     }
 
@@ -94,8 +100,8 @@ public class Worker extends UntypedActor {
     public String corenessToString() {
         StringBuilder b = new StringBuilder();
         b.append("[");
-        for (Map.Entry<Integer, Integer> i : graph.getcorenessTable().entrySet()) {
-            b.append(i.getKey().toString() + "=" + i.getValue());
+        for (int i : graph.getNodes()) {
+            b.append(Integer.toString(i) + "=" + graph.getCoreness(i));
             b.append(", ");
         }
         b.append("]");
