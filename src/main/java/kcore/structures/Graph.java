@@ -15,9 +15,10 @@ public class Graph implements Serializable {
     }
 
     public void addNode(int node) {
-        assert !nodes.contains(node);
-        nodes.add(node);
-        edges.put(node, new HashSet<Integer>());
+        if (!nodes.contains(node)) {
+            nodes.add(node);
+            edges.put(node, new HashSet<Integer>());
+        }
     }
 
     public void addEdge(int node1, int node2) {

@@ -12,6 +12,7 @@ public class GraphWithRemoteNodes extends Graph {
 
     GraphWithRemoteNodes() {
         super();
+        remoteNodes = new HashSet<Integer>();
         remoteEdges = new HashMap<Integer, HashSet<Integer>>();
     }
 

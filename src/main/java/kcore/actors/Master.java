@@ -186,10 +186,11 @@ public class Master extends UntypedActor {
 
     private void handleCorenessState(CorenessState message) {
         corenessReceived++;
+        partitionToActor.put(message.getPartitionId(), getSender());
+        log.info("received {} replies, partitionToActor size {}", corenessReceived, partitionToActor.size());
         if (corenessReceived == numPartitions) {
             getAllFrontierEdgesCoreness();
         }
-        log.info("received {} replies", corenessReceived);
     }
 
     private void getAllFrontierEdgesCoreness() {

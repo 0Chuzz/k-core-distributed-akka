@@ -40,6 +40,8 @@ public class FrontierEdge {
     }
 
     public void initQueryNodes() {
+        queryNodes = new HashSet<Integer>();
+        subgraph = new GraphWithCandidateSet();
         if (coreness1 <= coreness2) {
             queryNodes.add(node1);
         }
