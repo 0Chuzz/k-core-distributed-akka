@@ -54,4 +54,9 @@ public class FrontierEdgeDatabase extends ArrayList<FrontierEdge> {
         }
         return ret;
     }
+
+    public void markCompleted(FrontierEdge db) {
+        if (db != get(0)) throw new RuntimeException();
+        remove(0);
+    }
 }

@@ -1,6 +1,7 @@
 package kcore.actors;
 
 import akka.actor.ActorRef;
+import akka.actor.Cancellable;
 import akka.actor.UntypedActor;
 import akka.dispatch.sysmsg.Terminate;
 import akka.event.Logging;
@@ -10,26 +11,37 @@ import kcore.messages.*;
 import kcore.structures.FrontierEdge;
 import kcore.structures.FrontierEdgeDatabase;
 import kcore.structures.GraphWithCandidateSet;
+import scala.concurrent.duration.Duration;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Stefano on 09/03/2015.
  */
 
 public class Master extends UntypedActor {
+    private final Cancellable tick = getContext().system().scheduler().schedule(
+            Duration.create(500, TimeUnit.MILLISECONDS),
+            Duration.create(1, TimeUnit.SECONDS),
+            getSelf(), "tick", getContext().dispatcher(), null);
     ActorRef backend = getContext().actorOf(FromConfig.getInstance().props(),
             "workersRouter");
     LoggingAdapter log = Logging.getLogger(getContext().system(), this);
     HashMap<Integer, Integer> nodeToPartition = new HashMap<Integer, Integer>();
     HashMap<Integer, ActorRef> partitionToActor = new HashMap<Integer, ActorRef>();
     FrontierEdgeDatabase frontierEdges = new FrontierEdgeDatabase();
+    HashMap<Integer, FilenameLoadPartition> partitionMsgs;
     int numPartitions, corenessReceived;
 
+    @Override
+    public void postStop() {
+        tick.cancel();
+    }
 
     @Override
     public void preStart() {
@@ -38,10 +50,11 @@ public class Master extends UntypedActor {
         int totalInstances = splitPartitionFiles("graphfile", "partfile");
         numPartitions = totalInstances;
         corenessReceived = 0;
-
+        partitionMsgs = new HashMap<Integer, FilenameLoadPartition>();
         for (int i = 0; i < totalInstances; i++) {
-            backend.tell(new FilenameLoadPartition("smallfile" + i, i), getSelf());
+            partitionMsgs.put(i, new FilenameLoadPartition("smallfile" + i, i));
         }
+
     }
 
     private int splitPartitionFiles(String graphfile, String partfile) {
@@ -111,7 +124,11 @@ public class Master extends UntypedActor {
         // collect results
         log.debug(message.toString());
 
-        if (message instanceof CorenessState) {
+        if (message.equals("tick")) {
+            for (FilenameLoadPartition msg : partitionMsgs.values()) {
+                backend.tell(msg, getSelf());
+            }
+        } else if (message instanceof CorenessState) {
             handleCorenessState((CorenessState) message);
 
         } else if (message instanceof NewPartitionActor) {
@@ -145,7 +162,7 @@ public class Master extends UntypedActor {
             getOwner(db.node2).tell(msg, getSelf());
             //db.worker2.tell(msg2, getSelf());
 
-            frontierEdges.remove(db);
+            frontierEdges.markCompleted(db);
             frontierEdges.incrementLocalCoreness(toBeUpdated);
 
 
@@ -182,6 +199,7 @@ public class Master extends UntypedActor {
 
     private void handleNewPartitionActor(NewPartitionActor message) {
         partitionToActor.put(message.getId(), message.getActorRef());
+        partitionMsgs.remove(message.getId());
     }
 
     private void handleCorenessState(CorenessState message) {

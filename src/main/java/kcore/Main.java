@@ -61,6 +61,9 @@ public class Main {
             sys.shutdown();
             return;
         }
+        if (roles.contains("backend")) {
+            sys.actorOf(Props.create(WorkerCreator.class), "workerCreator");
+        }
         cluster.registerOnMemberUp(new Runnable() {
             @Override
             public void run() {
@@ -73,9 +76,7 @@ public class Main {
 
             }
         });
-        if (roles.contains("backend")) {
-            sys.actorOf(Props.create(WorkerCreator.class), "workerCreator");
-        }
+
     }
 
     private static Config readParamsFromCli(String[] args) {
