@@ -9,9 +9,9 @@ import java.util.HashSet;
  * Created by chuzz on 5/29/15.
  */
 public class FrontierEdgeDatabase extends ArrayList<FrontierEdge> {
-    public void mergeGraph(int node, GraphWithCandidateSet graph) {
+    public HashSet<Integer> mergeGraph(int node, GraphWithCandidateSet graph) {
         FrontierEdge db = get(0);
-        db.tryMergeGraph(node, graph);
+        return db.tryMergeGraph(node, graph);
     }
 
     public Collection<FrontierEdge> readyForPruning() {

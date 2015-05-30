@@ -30,12 +30,16 @@ public class FrontierEdge {
         }
     }
 
-    public void tryMergeGraph(int node, GraphWithCandidateSet graph) {
+    public HashSet<Integer> tryMergeGraph(int node, GraphWithCandidateSet graph) {
         if (queryNodes.contains(node)) {
             queryNodes.remove(node);
             subgraph.merge(graph);
+            HashSet<Integer> ret = new HashSet<Integer>(subgraph.candidateRemotes);
+            ret.removeAll(queryNodes);
             queryNodes.addAll(subgraph.candidateRemotes);
+            return ret;
         }
+        return null;
         //return subgraph.candidateRemotes;
     }
 

@@ -21,7 +21,7 @@ public class GraphWithCandidateSet extends GraphWithCoreness {
         super();
         candidateSet = new HashSet<Integer>();
         candidateRemotes = new HashSet<Integer>();
-        assert !graph.isRemote(node);
+        if (graph.isRemote(node)) throw new RuntimeException();
         recursiveTraverse(graph, node);
         updateCorenessFrom(graph);
     }
@@ -65,7 +65,7 @@ public class GraphWithCandidateSet extends GraphWithCoreness {
     }
 
     public HashSet<Integer> getCandidateSet() {
-        return candidateSet;
+        return new HashSet<Integer>(candidateSet);
     }
 
     public HashSet<Integer> getRemoteCandidates() {
