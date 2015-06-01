@@ -190,7 +190,7 @@ public class Master extends UntypedActor {
     }
 
     private void tryNextFrontierEdge() {
-        if (frontierEdges.processedEverything()) {
+        if (!frontierEdges.processedEverything()) {
             for (FrontierEdge db : frontierEdges.readyForCandidateSet()) {
                 this.askReachableNodes(db);
             }

@@ -55,14 +55,14 @@ public class FrontierEdgeDatabase extends ArrayList<FrontierEdge> {
                 db.coreness2 = map.get(db.node2);
                 //db.worker2 = sender;
             }
-            if (db.readyForCandidateSet()) {
+            if (db.readyForCandidateSet() && index == 0) {
                 db.initQueryNodes();
             }
         }
     }
 
     public boolean processedEverything() {
-        return this.size() > 0;
+        return this.size() == index;
     }
 
     public Collection<FrontierEdge> readyForCandidateSet() {
@@ -76,5 +76,6 @@ public class FrontierEdgeDatabase extends ArrayList<FrontierEdge> {
     public void markCompleted(FrontierEdge db) {
         if (db != get(index)) throw new RuntimeException();
         index++;
+        if (index < size()) get(index).initQueryNodes();
     }
 }
