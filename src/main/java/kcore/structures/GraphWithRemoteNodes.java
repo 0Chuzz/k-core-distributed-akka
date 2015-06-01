@@ -2,6 +2,7 @@ package kcore.structures;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * Created by chuzz on 5/22/15.
@@ -10,7 +11,7 @@ public class GraphWithRemoteNodes extends Graph {
     protected HashSet<Integer> remoteNodes;
     protected HashMap<Integer, HashSet<Integer>> remoteEdges;
 
-    GraphWithRemoteNodes() {
+    public GraphWithRemoteNodes() {
         super();
         remoteNodes = new HashSet<Integer>();
         remoteEdges = new HashMap<Integer, HashSet<Integer>>();
@@ -19,7 +20,8 @@ public class GraphWithRemoteNodes extends Graph {
 
     public void addRemoteEdge(int localNode, int remoteNode) {
         remoteNodes.add(remoteNode);
-        remoteEdges.put(localNode, new HashSet<Integer>());
+        if (!remoteEdges.containsKey(localNode))
+            remoteEdges.put(localNode, new HashSet<Integer>());
         remoteEdges.get(localNode).add(remoteNode);
     }
 
@@ -44,9 +46,33 @@ public class GraphWithRemoteNodes extends Graph {
         super.merge(g);
         remoteNodes.addAll(g.remoteNodes);
         remoteNodes.removeAll(nodes);
-        remoteEdges.putAll(g.remoteEdges);
-        for (HashSet<Integer> edges : remoteEdges.values()) {
-            edges.removeAll(nodes);
+        HashMap<Integer, HashSet<Integer>> oldremote = remoteEdges;
+        remoteEdges = new HashMap<Integer, HashSet<Integer>>();
+        for (Map.Entry<Integer, HashSet<Integer>> e : oldremote.entrySet()) {
+            for (int n : e.getValue()) {
+                if (nodes.contains(n)) {
+                    addEdge(e.getKey(), n);
+                } else {
+                    addRemoteEdge(e.getKey(), n);
+                }
+            }
         }
+        for (Map.Entry<Integer, HashSet<Integer>> e : g.getRemoteEdges().entrySet()) {
+            for (int n : e.getValue()) {
+                if (nodes.contains(n)) {
+                    addEdge(e.getKey(), n);
+                } else {
+                    addRemoteEdge(e.getKey(), n);
+                }
+            }
+        }
+    }
+
+    public HashSet<Integer> getRemoteNodes() {
+        return remoteNodes;
+    }
+
+    public HashMap<Integer, HashSet<Integer>> getRemoteEdges() {
+        return remoteEdges;
     }
 }

@@ -147,7 +147,7 @@ public class Master extends UntypedActor {
         //for (FrontierEdgeDb db : frontierEdges) {
 
         HashSet<Integer> newFrontierEdges = frontierEdges.mergeGraph(message.node, message.graph);
-        for (int i : newFrontierEdges) {
+        if (newFrontierEdges != null) for (int i : newFrontierEdges) {
             askReachableNodes(i);
         }
 

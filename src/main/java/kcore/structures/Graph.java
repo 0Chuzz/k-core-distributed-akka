@@ -38,7 +38,7 @@ public class Graph implements Serializable {
             if (edges.containsKey(entry.getKey())) {
                 edges.get(entry.getKey()).addAll(entry.getValue());
             } else {
-                edges.put(entry.getKey(), entry.getValue());
+                edges.put(entry.getKey(), new HashSet<Integer>(entry.getValue()));
             }
         }
     }
@@ -49,5 +49,9 @@ public class Graph implements Serializable {
 
     public HashSet<Integer> getNodes() {
         return nodes;
+    }
+
+    public HashMap<Integer, HashSet<Integer>> getEdges() {
+        return edges;
     }
 }

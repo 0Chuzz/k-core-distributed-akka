@@ -10,7 +10,7 @@ import java.util.HashSet;
 public class GraphWithCoreness extends GraphWithRemoteNodes {
     protected HashMap<Integer, Integer> corenessTable;
 
-    GraphWithCoreness() {
+    public GraphWithCoreness() {
         super();
         corenessTable = new HashMap<Integer, Integer>();
     }

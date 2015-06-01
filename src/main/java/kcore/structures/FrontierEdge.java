@@ -53,4 +53,8 @@ public class FrontierEdge {
             queryNodes.add(node2);
         }
     }
+
+    public int minCoreness() {
+        return coreness1 < coreness2 ? coreness1 : coreness2;
+    }
 }

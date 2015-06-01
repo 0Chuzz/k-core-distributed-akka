@@ -33,7 +33,8 @@ public class GraphWithCandidateSet extends GraphWithCoreness {
         for (int node : candidateSet) {
             int count = 0;
             for (int neighbour : getNeighbours(node)) {
-                if (candidateSet.contains(neighbour) || corenessTable.get(neighbour) > corenessTable.get(node)) {
+                if (candidateSet.contains(neighbour) || corenessTable.containsKey(neighbour) &&
+                        corenessTable.get(neighbour) > corenessTable.get(node)) {
                     count++;
                 }
             }
