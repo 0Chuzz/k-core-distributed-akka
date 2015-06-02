@@ -144,7 +144,7 @@ public class Master extends UntypedActor {
     }
 
     private void handleReachableNodesReply(ReachableNodesReply message) {
-        //for (FrontierEdgeDb db : frontierEdges) {
+        log.info("got reachable nodes from node {}", message.node);
 
         HashSet<Integer> newFrontierEdges = frontierEdges.mergeGraph(message.node, message.graph);
         if (newFrontierEdges != null) for (int i : newFrontierEdges) {
@@ -153,7 +153,7 @@ public class Master extends UntypedActor {
 
         for (FrontierEdge db : frontierEdges.readyForPruning()) {
             GraphWithCandidateSet unionSet = db.subgraph;
-
+            //unionSet.addEdge(db.node1, db.node2);
             HashSet<Integer> candidateSet = unionSet.getCandidateSet();
             HashSet<Integer> toBeUpdated = unionSet.getPrunedSet();
             log.info("frontier edge {}-{}: candidateSet: {} toBeUpdated: {}", db.node1, db.node2, candidateSet, toBeUpdated);

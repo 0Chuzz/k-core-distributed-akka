@@ -15,14 +15,15 @@ public class FrontierEdgeDatabase extends ArrayList<FrontierEdge> {
         int n;
         while (it.hasNext()) {
             n = it.next();
-            for (FrontierEdge fe : this) {
+            for (int i = 0; i <= index; i++) {
+                FrontierEdge fe = get(i);
                 if (fe.node1 == n && fe.coreness1 != db.minCoreness()) {
-                    db.queryNodes.remove(n);
+                    db.shortcutMerge(n, fe.coreness1);
                     it.remove();
                     break;
                 }
                 if (fe.node2 == n && fe.coreness2 != db.minCoreness()) {
-                    db.queryNodes.remove(n);
+                    db.shortcutMerge(n, fe.coreness2);
                     it.remove();
                     break;
                 }
@@ -55,9 +56,6 @@ public class FrontierEdgeDatabase extends ArrayList<FrontierEdge> {
                 db.coreness2 = map.get(db.node2);
                 //db.worker2 = sender;
             }
-            if (db.readyForCandidateSet() && index == 0) {
-                db.initQueryNodes();
-            }
         }
     }
 
@@ -76,6 +74,6 @@ public class FrontierEdgeDatabase extends ArrayList<FrontierEdge> {
     public void markCompleted(FrontierEdge db) {
         if (db != get(index)) throw new RuntimeException();
         index++;
-        if (index < size()) get(index).initQueryNodes();
+        //if (index < size()) get(index).initQueryNodes();
     }
 }

@@ -1,5 +1,6 @@
 package kcore.structures;
 
+import java.util.HashMap;
 import java.util.HashSet;
 
 /**
@@ -31,6 +32,8 @@ public class FrontierEdge {
     }
 
     public HashSet<Integer> tryMergeGraph(int node, GraphWithCandidateSet graph) {
+        if (queryNodes == null)
+            initQueryNodes();
         if (queryNodes.contains(node)) {
             queryNodes.remove(node);
             subgraph.merge(graph);
@@ -46,6 +49,10 @@ public class FrontierEdge {
     public void initQueryNodes() {
         queryNodes = new HashSet<Integer>();
         subgraph = new GraphWithCandidateSet();
+        subgraph.addEdge(node1, node2);
+        HashMap<Integer, Integer> ctable = subgraph.getcorenessTable();
+        ctable.put(node1, coreness1);
+        ctable.put(node2, coreness2);
         if (coreness1 <= coreness2) {
             queryNodes.add(node1);
         }
@@ -56,5 +63,12 @@ public class FrontierEdge {
 
     public int minCoreness() {
         return coreness1 < coreness2 ? coreness1 : coreness2;
+    }
+
+    public void shortcutMerge(int n, int coreness1) {
+        queryNodes.remove(n);
+        if (coreness1 > minCoreness()) {
+            subgraph.getcorenessTable().put(n, coreness1);
+        }
     }
 }
