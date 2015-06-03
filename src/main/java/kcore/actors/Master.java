@@ -208,6 +208,7 @@ public class Master extends UntypedActor {
         partitionToActor.put(message.getPartitionId(), getSender());
         log.info("received {} replies, partitionToActor size {}", corenessReceived, partitionToActor.size());
         if (corenessReceived == numPartitions) {
+            log.info("starting phase 2");
             getAllFrontierEdgesCoreness();
         }
     }
@@ -228,8 +229,11 @@ public class Master extends UntypedActor {
         for (int i = 0; i < frontierNodes.length; i++) {
 
             ActorRef worker2 = partitionToActor.get(i);
-
-            worker2.tell(new CorenessQuery(frontierNodes[i]), getSelf());
+            for (int j = 0; j < frontierNodes[i].size(); j = j + 100) {
+                int min = (j + 100 < frontierNodes[i].size()) ? j + 100 : frontierNodes[i].size();
+                ArrayList<Integer> slice = new ArrayList<Integer>(frontierNodes[i].subList(j, min));
+                worker2.tell(new CorenessQuery(slice), getSelf());
+            }
         }
     }
 
