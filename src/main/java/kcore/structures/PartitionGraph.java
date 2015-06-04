@@ -31,30 +31,15 @@ class PartitionGraph extends Graph {
     public FrontierEdgeTree getMergeTree() {
         HashMap<Integer, FrontierEdgeTree> partitionToTree = new HashMap<Integer, FrontierEdgeTree>();
         ArrayList<Edge> sortedMerges = new ArrayList<Edge>(edgesList.keySet());
-        ArrayList<Edge> sortedMerges2 = new ArrayList<Edge>();
 
         // heuristic merge order
-        //sort from quickest to slowest
+        //sort from slowest to quickest
         Collections.sort(sortedMerges, new Comparator<Edge>() {
             @Override
             public int compare(Edge edge, Edge t1) {
-                return (edgesList.get(edge).size() - edgesList.get(t1).size());
+                return -(edgesList.get(edge).size() - edgesList.get(t1).size());
             }
         });
-
-        // put it as late as possible, but before a colliding one
-        for (Edge e : sortedMerges){
-            int pos = 0;
-            for (pos = 0; pos < sortedMerges.size(); pos++) {
-                Edge next = sortedMerges.get(pos);
-                if (next.node1 == e.node1 || next.node1 == e.node2
-                        || next.node2 == e.node1 || next.node2 == e.node2) {
-                    break;
-                }
-            }
-            sortedMerges2.add(pos, e);
-        }
-        sortedMerges = sortedMerges2;
 
 
         FrontierEdgeTree ret = null;
