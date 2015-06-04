@@ -5,49 +5,71 @@ import java.util.*;
 /**
  * Created by chuzz on 5/29/15.
  */
-public class FrontierEdgeDatabase extends ArrayList<FrontierEdge> {
-    int index = 0;
-    public HashSet<Integer> mergeGraph(int node, GraphWithCandidateSet graph) {
-        FrontierEdge db = get(index);
-        HashSet<Integer> ret = db.tryMergeGraph(node, graph);
-        if (ret == null) return ret;
-        Iterator<Integer> it = ret.iterator();
-        int n;
-        while (it.hasNext()) {
-            n = it.next();
-            for (int i = 0; i <= index; i++) {
-                FrontierEdge fe = get(i);
-                if (fe.node1 == n && fe.coreness1 != db.minCoreness()) {
-                    db.shortcutMerge(n, fe.coreness1);
-                    it.remove();
-                    break;
-                }
-                if (fe.node2 == n && fe.coreness2 != db.minCoreness()) {
-                    db.shortcutMerge(n, fe.coreness2);
-                    it.remove();
-                    break;
-                }
-            }
+public class FrontierEdgeDatabase {
+    public ArrayList<FrontierEdge> list = new ArrayList<FrontierEdge>();
+    FrontierEdgeTree mergeTree;
+    HashSet<FrontierEdge> mergableEdges = new HashSet<FrontierEdge>();
+    HashSet<FrontierEdge> prunableEdges = new HashSet<FrontierEdge>();
+    HashSet<FrontierEdge> processedEdges = new HashSet<FrontierEdge>();
 
+    public void initMergeTree(HashMap<Integer, Integer> nToP) {
+        PartitionGraph pg = new PartitionGraph(nToP);
+        for (FrontierEdge fe : list) {
+            pg.addFrontierEdge(fe);
         }
-        return ret;
+        mergeTree = pg.getMergeTree();
+        mergableEdges.addAll(mergeTree.getReady());
+    }
+
+
+    public FrontierEdge get(int index) {
+        return list.get(index);
+    }
+
+    public HashSet<Integer> mergeGraph(int node, GraphWithCandidateSet graph) {
+        HashSet<Integer> retTot = new HashSet<Integer>();
+        for (FrontierEdge db : mergableEdges) {
+            HashSet<Integer> ret = db.tryMergeGraph(node, graph);
+            if (ret == null) return ret;
+            Iterator<Integer> it = ret.iterator();
+            int n;
+            while (it.hasNext()) {
+                n = it.next();
+                for (FrontierEdge fe : processedEdges) {
+                    if (fe.node1 == n && fe.coreness1 != db.minCoreness()) {
+                        db.shortcutMerge(n, fe.coreness1);
+                        it.remove();
+                        break;
+                    }
+                    if (fe.node2 == n && fe.coreness2 != db.minCoreness()) {
+                        db.shortcutMerge(n, fe.coreness2);
+                        it.remove();
+                        break;
+                    }
+                }
+
+            }
+            retTot.addAll(ret);
+            if (db.readyForPruning()) {
+                prunableEdges.add(db);
+            }
+        }
+        mergableEdges.removeAll(prunableEdges);
+        return retTot;
     }
 
     public Collection<FrontierEdge> readyForPruning() {
-        ArrayList<FrontierEdge> ret = new ArrayList<FrontierEdge>();
-        if (get(index).readyForPruning())
-            ret.add(get(index));
-        return ret;
+        return prunableEdges;
     }
 
     public void incrementLocalCoreness(HashSet<Integer> toBeUpdated) {
-        for (FrontierEdge db2 : this) {
+        for (FrontierEdge db2 : list) {
             db2.incrementLocalCoreness(toBeUpdated);
         }
     }
 
     public void updateCorenessTable(HashMap<Integer, Integer> map) {
-        for (FrontierEdge db : this) {
+        for (FrontierEdge db : list) {
             if (map.containsKey(db.node1)) {
                 db.coreness1 = map.get(db.node1);
                 //db.worker1 = sender;
@@ -60,20 +82,25 @@ public class FrontierEdgeDatabase extends ArrayList<FrontierEdge> {
     }
 
     public boolean processedEverything() {
-        return this.size() == index;
+        return list.size() == processedEdges.size();
     }
 
     public Collection<FrontierEdge> readyForCandidateSet() {
-        ArrayList<FrontierEdge> ret = new ArrayList<FrontierEdge>();
-        if (get(index).readyForCandidateSet()) {
-            ret.add(get(index));
-        }
-        return ret;
+        return mergableEdges;
     }
 
     public void markCompleted(FrontierEdge db) {
-        if (db != get(index)) throw new RuntimeException();
-        index++;
-        //if (index < size()) get(index).initQueryNodes();
+        prunableEdges.remove(db);
+        processedEdges.add(db);
+        mergeTree.done(db);
+        mergableEdges.addAll(mergeTree.getReady());
+    }
+
+    public ArrayList<FrontierEdge> getList() {
+        return list;
+    }
+
+    public void add(FrontierEdge e) {
+        this.list.add(e);
     }
 }

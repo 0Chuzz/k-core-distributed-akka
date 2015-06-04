@@ -32,6 +32,7 @@ public class Master extends UntypedActor {
     ActorRef backend = getContext().actorOf(FromConfig.getInstance().props(),
             "workersRouter");
     LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+
     HashMap<Integer, Integer> nodeToPartition = new HashMap<Integer, Integer>();
     HashMap<Integer, ActorRef> partitionToActor = new HashMap<Integer, ActorRef>();
     FrontierEdgeDatabase frontierEdges = new FrontierEdgeDatabase();
@@ -153,7 +154,6 @@ public class Master extends UntypedActor {
 
         for (FrontierEdge db : frontierEdges.readyForPruning()) {
             GraphWithCandidateSet unionSet = db.subgraph;
-            //unionSet.addEdge(db.node1, db.node2);
             HashSet<Integer> candidateSet = unionSet.getCandidateSet();
             HashSet<Integer> toBeUpdated = unionSet.getPrunedSet();
             log.info("frontier edge {}-{}: candidateSet: {} toBeUpdated: {}", db.node1, db.node2, candidateSet, toBeUpdated);
@@ -178,7 +178,6 @@ public class Master extends UntypedActor {
         for (ActorRef w : partitionToActor.values()) {
             w.tell(new Terminate(), getSelf());
         }
-        //Cluster.get(getContext().system()).shutdown();
     }
 
     private void handleCorenessReply(CorenessReply message) {
@@ -209,6 +208,7 @@ public class Master extends UntypedActor {
         log.info("received {} replies, partitionToActor size {}", corenessReceived, partitionToActor.size());
         if (corenessReceived == numPartitions) {
             log.info("starting phase 2");
+            frontierEdges.initMergeTree(nodeToPartition);
             getAllFrontierEdgesCoreness();
         }
     }
@@ -220,7 +220,7 @@ public class Master extends UntypedActor {
             frontierNodes[i] = new ArrayList<Integer>();
         }
 
-        for (FrontierEdge fe : frontierEdges) {
+        for (FrontierEdge fe : frontierEdges.getList()) {
             Integer part1 = nodeToPartition.get(fe.node1);
             frontierNodes[part1].add(fe.node1);
             Integer part2 = nodeToPartition.get(fe.node2);
