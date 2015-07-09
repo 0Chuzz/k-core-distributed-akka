@@ -227,10 +227,10 @@ public class Master extends UntypedActor {
             frontierNodes[part2].add(fe.node2);
         }
         for (int i = 0; i < frontierNodes.length; i++) {
-
+            int querysize = 100;
             ActorRef worker2 = partitionToActor.get(i);
-            for (int j = 0; j < frontierNodes[i].size(); j = j + 100) {
-                int min = (j + 100 < frontierNodes[i].size()) ? j + 100 : frontierNodes[i].size();
+            for (int j = 0; j < frontierNodes[i].size(); j = j + querysize) {
+                int min = (j + querysize < frontierNodes[i].size()) ? j + querysize : frontierNodes[i].size();
                 ArrayList<Integer> slice = new ArrayList<Integer>(frontierNodes[i].subList(j, min));
                 worker2.tell(new CorenessQuery(slice), getSelf());
             }
