@@ -75,7 +75,7 @@ public class Master extends UntypedActor {
             reader = new Scanner(new File(partfile));
         } catch (FileNotFoundException e) {
             log.warning("file {} not found: loading example partfile", partfile);
-            reader = new Scanner(getClass().getClassLoader().getResource("partfile").getFile());
+            reader = new Scanner(getClass().getResourceAsStream("/partfile"));
         }
 
         Set<Integer> partitions = new HashSet<Integer>();
@@ -103,7 +103,8 @@ public class Master extends UntypedActor {
             reader = new Scanner(new File(graphfile));
         } catch (FileNotFoundException e) {
             log.warning("file {} not found: loading example graphfile", graphfile);
-            reader = new Scanner(getClass().getClassLoader().getResource("graphfile").getFile());
+            reader = new Scanner(getClass().getResourceAsStream("/graphfile"));
+
         }
         while (reader.hasNextInt()) {
             int node1 = reader.nextInt();
@@ -128,6 +129,7 @@ public class Master extends UntypedActor {
                 e.printStackTrace();
             }
         }
+        log.info("testtest {}", partitions.size());
         return partitions.size();
     }
 
