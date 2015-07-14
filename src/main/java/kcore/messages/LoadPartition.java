@@ -5,7 +5,7 @@ import kcore.structures.Graph;
 import java.io.Serializable;
 
 /**
- * Created by Stefano on 09/03/2015.
+ * Abstract partition loader
  */
 abstract public class LoadPartition implements Serializable {
     /**

@@ -3,7 +3,7 @@ package kcore.messages;
 import java.io.Serializable;
 
 /**
- * Created by Stefano on 09/03/2015.
+ * Partial coreness end of calculation signal
  */
 public class CorenessState implements Serializable {
     /**

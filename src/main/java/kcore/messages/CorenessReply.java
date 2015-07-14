@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 
 /**
- * Created by chuzz on 4/21/15.
+ * Coreness values reply
  */
 public class CorenessReply implements Serializable {
     //public int[] node, coreness;

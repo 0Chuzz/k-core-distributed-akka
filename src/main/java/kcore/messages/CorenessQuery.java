@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
- * Created by chuzz on 4/21/15.
+ * Query coreness values
  */
 public class CorenessQuery implements Serializable {
     /**

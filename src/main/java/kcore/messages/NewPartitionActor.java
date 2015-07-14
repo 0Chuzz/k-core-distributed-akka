@@ -5,7 +5,7 @@ import akka.actor.ActorRef;
 import java.io.Serializable;
 
 /**
- * Created by chuzz on 4/21/15.
+ * Signal creation of new worker
  */
 public class NewPartitionActor implements Serializable {
 

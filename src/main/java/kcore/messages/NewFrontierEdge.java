@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.HashSet;
 
 /**
- * Created by chuzz on 4/16/15.
+ * New frontier edge, with set of nodes to be updated
  */
 public class NewFrontierEdge implements Serializable {
     /**

@@ -7,7 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 
 /**
- * Created by Stefano on 16/03/2015.
+ * Load a partition from a local file
  */
 public class FilenameLoadPartition extends LoadPartition {
     /**
@@ -24,6 +24,11 @@ public class FilenameLoadPartition extends LoadPartition {
         this.partitionId = partitionId;
     }
 
+    /**
+     * Read edges from  a text file
+     *
+     * @return
+     */
     @Override
     public Graph getPartition() {
         try {

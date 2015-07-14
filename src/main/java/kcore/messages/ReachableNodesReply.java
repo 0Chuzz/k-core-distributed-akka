@@ -5,7 +5,7 @@ import kcore.structures.GraphWithCandidateSet;
 import java.io.Serializable;
 
 /**
- * Created by chuzz on 4/21/15.
+ * Reachability information
  */
 public class ReachableNodesReply implements Serializable {
     public final GraphWithCandidateSet graph;
