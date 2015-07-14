@@ -10,7 +10,7 @@ import kcore.structures.GraphWithCoreness;
 import java.util.HashMap;
 
 /**
- * Created by Stefano on 09/03/2015.
+ * Worker actor for k-core calculation
  */
 
 public class Worker extends UntypedActor {

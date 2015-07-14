@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 /**
- * Created by Stefano on 09/03/2015.
+ * Frontier edge data structure. checks for status
  */
 public class FrontierEdge {
     public int node1, node2;

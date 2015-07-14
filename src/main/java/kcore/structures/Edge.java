@@ -1,7 +1,7 @@
 package kcore.structures;
 
 /**
- * Created by chuzz on 6/4/15.
+ * Specialized edge class, with equality and hashing
  */
 class Edge {
     public int node1, node2;

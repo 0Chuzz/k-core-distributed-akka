@@ -9,7 +9,7 @@ import kcore.messages.LoadPartition;
 import kcore.messages.NewPartitionActor;
 
 /**
- * Created by chuzz on 4/21/15.
+ * Worker actor creator
  */
 public class WorkerCreator extends UntypedActor {
     LoggingAdapter log = Logging.getLogger(getContext().system(), this);

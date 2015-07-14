@@ -21,7 +21,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by Stefano on 09/03/2015.
+ * Master actor for k-core calculation
  */
 
 public class Master extends UntypedActor {
