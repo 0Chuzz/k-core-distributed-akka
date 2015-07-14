@@ -72,6 +72,7 @@ public class Worker extends UntypedActor {
 
     /**
      * Handle query for reachable nodes. builds the subgraph and returns it.
+     *
      * @param message
      */
     private void handleReachableNodesQuery(ReachableNodesQuery message) {
