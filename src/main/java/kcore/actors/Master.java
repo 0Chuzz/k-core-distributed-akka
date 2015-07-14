@@ -58,6 +58,13 @@ public class Master extends UntypedActor {
 
     }
 
+    /**
+     * Split a single graph file into multiple files, one for each partition
+     *
+     * @param graphfile name of the file containing the graph
+     * @param partfile  name of the file containing the partition info
+     * @return number of partitions
+     */
     private int splitPartitionFiles(String graphfile, String partfile) {
         Scanner reader;
 
@@ -144,6 +151,13 @@ public class Master extends UntypedActor {
         }
     }
 
+    /**
+     * Handles the result of a reachable nodes query.
+     * <p>
+     * First it updates the frontier edge database. If some edge is ready for pruning phase, process it.
+     *
+     * @param message message to be handled
+     */
     private void handleReachableNodesReply(ReachableNodesReply message) {
         log.info("got reachable nodes from node {}", message.node);
 
@@ -173,6 +187,9 @@ public class Master extends UntypedActor {
         //}
     }
 
+    /**
+     * Handles the end of the algorithm. Terminates all worker and exits.
+     */
     private void handleEndOfAlgorithm() {
         log.info("finished");
         for (ActorRef w : partitionToActor.values()) {
@@ -180,6 +197,10 @@ public class Master extends UntypedActor {
         }
     }
 
+    /**
+     * Handle result of coreness query. Updates the database and try to progress.
+     * @param message
+     */
     private void handleCorenessReply(CorenessReply message) {
 
         frontierEdges.updateCorenessTable(message.map);
@@ -188,6 +209,10 @@ public class Master extends UntypedActor {
 
     }
 
+    /**
+     * Try to progess the algorithm. If some nodes are ready for candidate set construction, send query.
+     * If all nodes have been processed, terminate the algorithm.
+     */
     private void tryNextFrontierEdge() {
         if (!frontierEdges.processedEverything()) {
             for (FrontierEdge db : frontierEdges.readyForCandidateSet()) {
@@ -197,11 +222,25 @@ public class Master extends UntypedActor {
 
     }
 
+    /**
+     * Handle the creation of a partition actor. Store him into database, handle duplicates, stop request
+     * repetition.
+     * @param message
+     */
     private void handleNewPartitionActor(NewPartitionActor message) {
+        /*
+        if (partitionToActor.containsKey(message.getId()){
+            partitionToActor.get(message.getId()).tell(new Terminate, getSelf());
+        }
+        */
         partitionToActor.put(message.getId(), message.getActorRef());
         partitionMsgs.remove(message.getId());
     }
 
+    /**
+     * Handle the completion of the first part by the worker. Fire up second phase.
+     * @param message
+     */
     private void handleCorenessState(CorenessState message) {
         corenessReceived++;
         partitionToActor.put(message.getPartitionId(), getSender());
@@ -213,6 +252,9 @@ public class Master extends UntypedActor {
         }
     }
 
+    /**
+     * Query coreness to all partition to initialize local frontier edge database
+     */
     private void getAllFrontierEdgesCoreness() {
         ArrayList<Integer>[] frontierNodes;
         frontierNodes = new ArrayList[numPartitions];
@@ -237,6 +279,10 @@ public class Master extends UntypedActor {
         }
     }
 
+    /**
+     * Query for the reachable nodes necessary to build the candidate set for a certain froniter edge
+     * @param db frontier edge in question
+     */
     private void askReachableNodes(FrontierEdge db) {
         if (db.coreness1 <= db.coreness2) {
             askReachableNodes(db.node1);
@@ -246,11 +292,20 @@ public class Master extends UntypedActor {
         }
     }
 
+    /**
+     * Query for the reachable nodes for a certain node to the appropriate partition
+     * @param node
+     */
     private void askReachableNodes(int node) {
         ActorRef worker = getOwner(node);
         worker.tell(new ReachableNodesQuery(node), getSelf());
     }
 
+    /**
+     * Returns an ActorRef for the worker associated to the partition of a node
+     * @param node
+     * @return
+     */
     private ActorRef getOwner(int node) {
         ActorRef worker = partitionToActor.get(nodeToPartition.get(node));
         return worker;
