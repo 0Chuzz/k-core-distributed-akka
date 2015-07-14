@@ -20,7 +20,15 @@ import java.util.Enumeration;
 import java.util.Set;
 import java.util.Vector;
 
+/**
+ * Main class
+ */
 public class Main {
+    /**
+     * read configuration and start actor system
+     *
+     * @param args
+     */
     public static void main(String[] args) {
         final Config confstr;
         if (args.length > 1) {
@@ -49,6 +57,11 @@ public class Main {
         fireUpActorSystem(config, "k-core");
     }
 
+    /**
+     * create and initialize a new actor system
+     * @param config
+     * @param kcorename
+     */
     private static void fireUpActorSystem(Config config, String kcorename) {
         final ActorSystem sys = ActorSystem.create(kcorename, config);
         sys.log().debug("actor system initialized");
@@ -79,6 +92,11 @@ public class Main {
 
     }
 
+    /**
+     * read a configuration file passed by command line
+     * @param args
+     * @return
+     */
     private static Config readParamsFromCli(String[] args) {
         if (args[1] != "test")
             return ConfigFactory.parseFile(new File(args[1]));
@@ -86,6 +104,10 @@ public class Main {
             return null;
     }
 
+    /**
+     * read configuration from a graphical dialog
+     * @return
+     */
     private static Config readParamsFromGui() {
         String confstr;
         String[] roleStr = {"frontend", "backend"};
