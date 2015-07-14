@@ -7,6 +7,7 @@ import akka.dispatch.sysmsg.Terminate;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.routing.FromConfig;
+import com.typesafe.config.Config;
 import kcore.messages.*;
 import kcore.structures.FrontierEdge;
 import kcore.structures.FrontierEdgeDatabase;
@@ -48,7 +49,9 @@ public class Master extends UntypedActor {
     public void preStart() {
         log.debug("Master starting");
         // start work
-        int totalInstances = splitPartitionFiles("graphfile", "partfile");
+        Config conf = getContext().system().settings().config();
+        int totalInstances = splitPartitionFiles(conf.getString("k-core.graph-file"),
+                conf.getString("k-core.part-file"));
         numPartitions = totalInstances;
         corenessReceived = 0;
         partitionMsgs = new HashMap<Integer, FilenameLoadPartition>();
@@ -71,8 +74,8 @@ public class Master extends UntypedActor {
         try {
             reader = new Scanner(new File(partfile));
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return -1;
+            log.warning("file {} not found: loading example partfile", partfile);
+            reader = new Scanner(getClass().getClassLoader().getResource("partfile").getFile());
         }
 
         Set<Integer> partitions = new HashSet<Integer>();
@@ -99,7 +102,8 @@ public class Master extends UntypedActor {
         try {
             reader = new Scanner(new File(graphfile));
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            log.warning("file {} not found: loading example graphfile", graphfile);
+            reader = new Scanner(getClass().getClassLoader().getResource("graphfile").getFile());
         }
         while (reader.hasNextInt()) {
             int node1 = reader.nextInt();

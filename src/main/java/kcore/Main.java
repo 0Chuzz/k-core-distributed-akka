@@ -128,15 +128,30 @@ public class Main {
         }
         JComboBox ips = new JComboBox(ipStr);
         JTextField seed = new JTextField("seed-node-ip");
-        final JComponent[] comps = {roles, ips, seed};
+        JTextField graphfile = new JTextField("graphfile");
+        JTextField partfile = new JTextField("partfile");
+        final JComponent[] comps = {roles, ips, seed, graphfile, partfile};
         JOptionPane jp = new JOptionPane(comps);
-        if (JOptionPane.OK_OPTION ==
-                JOptionPane.showConfirmDialog(null, comps, "akka parameters", JOptionPane.OK_CANCEL_OPTION)) {
+        Object[] buttons = {"Start", "Local Test", "Exit"};
+        int result = JOptionPane.showOptionDialog(null, comps, "akka parameters",
+                JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE,
+                null, buttons, buttons[0]);
+        if (JOptionPane.OK_OPTION == result) {
             confstr = String.format(
-                    "akka.cluster.roles=[%s]\nakka.remote.netty.tcp.hostname=\"%s\"\nakka.cluster.seed-nodes=[\"akka.tcp://k-core@%s:25515\", \"akka.tcp://k-core@%s:25515\"]",
-                    roles.getSelectedItem().toString(), ips.getSelectedItem().toString(), ips.getSelectedItem().toString(), seed.getText());
+                    "akka.cluster.roles=[%s]\n" +
+                            "akka.remote.netty.tcp.hostname=\"%s\"\n" +
+                            "akka.cluster.seed-nodes=[\"akka.tcp://k-core@%s:25515\", " +
+                            "\"akka.tcp://k-core@%s:25515\"]\n" +
+                            "k-core.graph-file=\"%s\"\n" +
+                            "k-core.part-file=\"%s\"\n",
+                    roles.getSelectedItem().toString(), ips.getSelectedItem().toString(),
+                    ips.getSelectedItem().toString(), seed.getText(),
+                    graphfile.getText(), partfile.getText());
 
+        } else if (result == JOptionPane.NO_OPTION) {
+            return null;
         } else {
+            System.exit(0);
             return null;
         }
         return ConfigFactory.parseString(confstr);
