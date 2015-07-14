@@ -4,7 +4,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 /**
- * Frontier edge data structure. checks for status
+ * Frontier edge data structure. This object represents a frontier edge inside the
+ * master edge database.
  */
 public class FrontierEdge {
     public int node1, node2;
@@ -13,15 +14,29 @@ public class FrontierEdge {
     public GraphWithCandidateSet subgraph;
     public HashSet<Integer> queryNodes;
 
+    /**
+     * Returns whether the edge is ready for the candidate set construction phase.
+     *
+     * @return
+     */
     public boolean readyForCandidateSet() {
         return coreness1 != -1 && coreness2 != -1;
     }
 
+    /**
+     * Returns whether the edge is ready for the set pruning phase
+     * @return
+     */
     public boolean readyForPruning() {
         return queryNodes.isEmpty();
     }
 
 
+    /**
+     * Increment stored coreness value when a frontier edge is processed and this node still belongs to the
+     * update set.
+     * @param toBeUpdated
+     */
     public void incrementLocalCoreness(HashSet<Integer> toBeUpdated) {
         if (toBeUpdated.contains(node1)) {
             coreness1++;
@@ -31,6 +46,13 @@ public class FrontierEdge {
         }
     }
 
+    /**
+     * Try to update reachable nodes and candidate set. Checks if new remote nodes have to be
+     * queried.
+     * @param node starting node
+     * @param graph reachable subgraph
+     * @return remote nodes to be queried
+     */
     public HashSet<Integer> tryMergeGraph(int node, GraphWithCandidateSet graph) {
         if (queryNodes == null)
             initQueryNodes();
@@ -46,6 +68,9 @@ public class FrontierEdge {
         //return subgraph.candidateRemotes;
     }
 
+    /**
+     * Initialize reachable subgraph and remote node query
+     */
     public void initQueryNodes() {
         queryNodes = new HashSet<Integer>();
         subgraph = new GraphWithCandidateSet();
@@ -65,6 +90,12 @@ public class FrontierEdge {
         return coreness1 < coreness2 ? coreness1 : coreness2;
     }
 
+    /**
+     * Unflag node that doesn't need to be queried for reachable nodes after all. (eg already in processed
+     * edges)
+     * @param n         node
+     * @param coreness1 coreness of the node
+     */
     public void shortcutMerge(int n, int coreness1) {
         queryNodes.remove(n);
         if (coreness1 > minCoreness()) {

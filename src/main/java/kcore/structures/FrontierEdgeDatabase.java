@@ -3,7 +3,8 @@ package kcore.structures;
 import java.util.*;
 
 /**
- * Created by chuzz on 5/29/15.
+ * Database of frontier edges. Master handles the frontier edge processing
+ * status through this class.
  */
 public class FrontierEdgeDatabase {
     public ArrayList<FrontierEdge> list = new ArrayList<FrontierEdge>();
@@ -12,6 +13,11 @@ public class FrontierEdgeDatabase {
     HashSet<FrontierEdge> prunableEdges = new HashSet<FrontierEdge>();
     HashSet<FrontierEdge> processedEdges = new HashSet<FrontierEdge>();
 
+    /**
+     * Initialize merge tree strategy.
+     *
+     * @param nToP node to partition map.
+     */
     public void initMergeTree(HashMap<Integer, Integer> nToP) {
         PartitionGraph pg = new PartitionGraph(nToP);
         for (FrontierEdge fe : list) {
@@ -22,10 +28,20 @@ public class FrontierEdgeDatabase {
     }
 
 
+    /**
+     * Get a frontier edge from the list.
+     * @param index
+     * @return
+     */
     public FrontierEdge get(int index) {
         return list.get(index);
     }
 
+    /**
+     * Merge a reachability subgraph into the appropriate frontier edge entry.
+     * If this entry has the full reachable graph, move it into the prunable set, else
+     * return to Master the list of new nodes to query.
+     */
     public HashSet<Integer> mergeGraph(int node, GraphWithCandidateSet graph) {
         HashSet<Integer> retTot = new HashSet<Integer>();
         for (FrontierEdge db : mergableEdges) {
@@ -58,16 +74,28 @@ public class FrontierEdgeDatabase {
         return retTot;
     }
 
+    /**
+     * Return all the edges that are ready for the pruning phase.
+     * @return
+     */
     public Collection<FrontierEdge> readyForPruning() {
         return prunableEdges;
     }
 
+    /**
+     * Increment local stored coreness values from updated nodes set.
+     * @param toBeUpdated
+     */
     public void incrementLocalCoreness(HashSet<Integer> toBeUpdated) {
         for (FrontierEdge db2 : list) {
             db2.incrementLocalCoreness(toBeUpdated);
         }
     }
 
+    /**
+     * Update local coreness value from coreness map received from worker
+     * @param map node to coreness map
+     */
     public void updateCorenessTable(HashMap<Integer, Integer> map) {
         for (FrontierEdge db : list) {
             if (map.containsKey(db.node1)) {
@@ -81,14 +109,26 @@ public class FrontierEdgeDatabase {
         }
     }
 
+    /**
+     * Returns whether every node has been completely processed.
+     * @return
+     */
     public boolean processedEverything() {
         return list.size() == processedEdges.size();
     }
 
+    /**
+     * Returns the set of edges that are ready for the candidate set phase
+     * @return
+     */
     public Collection<FrontierEdge> readyForCandidateSet() {
         return mergableEdges;
     }
 
+    /**
+     * Move a frontier edge into the complete list, and update merge tree.
+     * @param db
+     */
     public void markCompleted(FrontierEdge db) {
         prunableEdges.remove(db);
         processedEdges.add(db);
@@ -96,10 +136,18 @@ public class FrontierEdgeDatabase {
         mergableEdges.addAll(mergeTree.getReady());
     }
 
+    /**
+     * Get list of frontier edges
+     * @return
+     */
     public ArrayList<FrontierEdge> getList() {
         return list;
     }
 
+    /**
+     * Add a frontier edge
+     * @param e
+     */
     public void add(FrontierEdge e) {
         this.list.add(e);
     }
