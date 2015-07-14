@@ -16,7 +16,13 @@ public class GraphWithCandidateSet extends GraphWithCoreness {
         candidateRemotes = new HashSet<Integer>();
     }
 
-
+    /**
+     * Build a new graph, containing the reachable nodes from a starting node having the same
+     * coreness values, plus neighbours having higher coreness.
+     *
+     * @param graph
+     * @param node
+     */
     public GraphWithCandidateSet(GraphWithCoreness graph, int node) {
         super();
         candidateSet = new HashSet<Integer>();
@@ -27,6 +33,9 @@ public class GraphWithCandidateSet extends GraphWithCoreness {
     }
 
 
+    /**
+     * prune the candidate nodes by counting neighbours
+     */
     public void pruneCandidateNodes() {
         boolean changed = false;
         HashSet<Integer> removed = new HashSet<Integer>();
@@ -49,6 +58,11 @@ public class GraphWithCandidateSet extends GraphWithCoreness {
         }
     }
 
+    /**
+     * Recursively create the graph by checking every neighbour.
+     * @param g source graph
+     * @param node analyzed node
+     */
     private void recursiveTraverse(GraphWithCoreness g, int node) {
         if (candidateSet.contains(node)) return;
         candidateSet.add(node);
@@ -73,6 +87,10 @@ public class GraphWithCandidateSet extends GraphWithCoreness {
         return candidateRemotes;
     }
 
+    /**
+     * merge a subgraph from a remote partition
+     * @param graph
+     */
     public void merge(GraphWithCandidateSet graph) {
         super.merge(graph);
         this.candidateSet.addAll(graph.candidateSet);
@@ -80,14 +98,28 @@ public class GraphWithCandidateSet extends GraphWithCoreness {
         this.candidateRemotes.removeAll(candidateSet);
     }
 
+    /**
+     * Checks whether we need to query a remote node.
+     * @param node
+     * @return
+     */
     public boolean waitingForRemote(int node) {
         return candidateRemotes.contains(node);
     }
 
+    /**
+     * Checks whether we need to query more partitions, as the reachability graph
+     * contains remote nodes.
+     * @return
+     */
     public boolean waitingForRemote() {
         return candidateRemotes.size() > 0;
     }
 
+    /**
+     * Get the set of nodes to be updates
+     * @return
+     */
     public HashSet<Integer> getPrunedSet() {
         if (toBeUpdated == null) {
             HashSet<Integer> oldCandidateSet = new HashSet<Integer>(candidateSet);

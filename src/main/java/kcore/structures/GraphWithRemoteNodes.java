@@ -42,6 +42,11 @@ public class GraphWithRemoteNodes extends Graph {
 
     }
 
+    /**
+     * Merge graph from a different partition. Pay attention to remote nodes that become local.
+     *
+     * @param g
+     */
     public void merge(GraphWithRemoteNodes g) {
         super.merge(g);
         remoteNodes.addAll(g.remoteNodes);

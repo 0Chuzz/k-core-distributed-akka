@@ -15,6 +15,11 @@ public class GraphWithCoreness extends GraphWithRemoteNodes {
         corenessTable = new HashMap<Integer, Integer>();
     }
 
+    /**
+     * Build the coreness table of a graph
+     *
+     * @param g
+     */
     public GraphWithCoreness(Graph g) {
         this.nodes = g.nodes;
         this.edges = g.edges;
@@ -25,6 +30,9 @@ public class GraphWithCoreness extends GraphWithRemoteNodes {
     }
 
 
+    /**
+     * Sequential algorithm for coreness calculation. Calls original sequential algorithhm
+     */
     public void calculateCoreness() {
         int[] cornessArray;
 
@@ -57,6 +65,12 @@ public class GraphWithCoreness extends GraphWithRemoteNodes {
         }
     }
 
+    /**
+     * Original sequential algorithm
+     * @param f
+     * @return
+     * @throws Exception
+     */
     private int[] kShellCoreness(RandomAccessFile f) throws Exception {
         int n = f.readInt();
         int[] index = new int[n];

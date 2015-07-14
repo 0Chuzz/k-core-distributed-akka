@@ -28,6 +28,11 @@ class PartitionGraph extends Graph {
         edgesList.get(edge).add(fe);
     }
 
+    /**
+     * produce the merge tree by heuristically choosing the partition couples order.
+     *
+     * @return
+     */
     public FrontierEdgeTree getMergeTree() {
         HashMap<Integer, FrontierEdgeTree> partitionToTree = new HashMap<Integer, FrontierEdgeTree>();
         ArrayList<Edge> sortedMerges = new ArrayList<Edge>(edgesList.keySet());
