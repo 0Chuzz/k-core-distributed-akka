@@ -3,6 +3,8 @@ package kcore.actors;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
+import akka.cluster.Cluster;
+import akka.cluster.ClusterEvent;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import kcore.messages.LoadPartition;
@@ -17,6 +19,14 @@ public class WorkerCreator extends UntypedActor {
     @Override
     public void preStart() {
         log.info("{} starting", this);
+        Cluster.get(getContext().system()).subscribe(getSelf(), ClusterEvent.MemberExited.class);
+    }
+
+    @Override
+    public void postStop() {
+        Cluster.get(getContext().system()).shutdown();
+        getContext().system().shutdown();
+        System.exit(0);
     }
 
     @Override
@@ -27,6 +37,11 @@ public class WorkerCreator extends UntypedActor {
             log.info("Creating actor {} for partition {}", actorRef, lp.getPartitionId());
             actorRef.tell(message, getSender());
             getSender().tell(new NewPartitionActor(lp.getPartitionId(), actorRef), getSelf());
+        } else if (message instanceof ClusterEvent.MemberExited) {
+            log.info("worker creator exiting");
+            Cluster.get(getContext().system()).shutdown();
+            getContext().system().shutdown();
+            System.exit(0);
         }
     }
 }

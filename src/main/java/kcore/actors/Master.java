@@ -3,6 +3,8 @@ package kcore.actors;
 import akka.actor.ActorRef;
 import akka.actor.Cancellable;
 import akka.actor.UntypedActor;
+import akka.cluster.Cluster;
+import akka.cluster.ClusterEvent;
 import akka.dispatch.sysmsg.Terminate;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -43,6 +45,9 @@ public class Master extends UntypedActor {
     @Override
     public void postStop() {
         tick.cancel();
+        Cluster.get(getContext().system()).shutdown();
+        getContext().system().shutdown();
+        System.exit(0);
     }
 
     @Override
@@ -153,6 +158,25 @@ public class Master extends UntypedActor {
         } else if (message instanceof ReachableNodesReply) {
             handleReachableNodesReply((ReachableNodesReply) message);
 
+        } else if (message instanceof FinalCorenessReply) {
+            try {
+                writeResult(((FinalCorenessReply) message).table);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            getSender().tell(new Terminate(), getSelf());
+            corenessReceived++;
+            log.info("coreness received: {}", corenessReceived);
+            if (corenessReceived == numPartitions) {
+                log.info("master exiting");
+                Cluster cluster = Cluster.get(getContext().system());
+                cluster.subscribe(getSelf(), ClusterEvent.MemberExited.class);
+
+                cluster.leave(cluster.selfAddress());
+            }
+        } else if (message instanceof ClusterEvent.MemberExited) {
+            //getContext().system().shutdown();
+            getSelf().tell(new Terminate(), getSelf());
         }
     }
 
@@ -197,9 +221,22 @@ public class Master extends UntypedActor {
      */
     private void handleEndOfAlgorithm() {
         log.info("finished");
+        corenessReceived = 0;
         for (ActorRef w : partitionToActor.values()) {
-            w.tell(new Terminate(), getSelf());
+            w.tell(new FinalCorenessQuery(), getSelf());
         }
+    }
+
+    /**
+     * Write result into file
+     */
+    private void writeResult(HashMap<Integer, Integer> corenessTable) throws IOException {
+        Config conf = getContext().system().settings().config();
+        FileWriter writer = new FileWriter(conf.getString("k-core.coreness-file"), true);
+        for (Map.Entry<Integer, Integer> entry : corenessTable.entrySet()) {
+            writer.write("" + entry.getKey() + " " + entry.getValue() + "\n");
+        }
+        writer.close();
     }
 
     /**

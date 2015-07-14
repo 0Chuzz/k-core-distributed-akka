@@ -76,6 +76,7 @@ public class Main {
         }
         if (roles.contains("backend")) {
             sys.actorOf(Props.create(WorkerCreator.class), "workerCreator");
+
         }
         cluster.registerOnMemberUp(new Runnable() {
             @Override
@@ -130,7 +131,8 @@ public class Main {
         JTextField seed = new JTextField("seed-node-ip");
         JTextField graphfile = new JTextField("graphfile");
         JTextField partfile = new JTextField("partfile");
-        final JComponent[] comps = {roles, ips, seed, graphfile, partfile};
+        JTextField corenessfile = new JTextField("corenessfile");
+        final JComponent[] comps = {roles, ips, seed, graphfile, partfile, corenessfile};
         JOptionPane jp = new JOptionPane(comps);
         Object[] buttons = {"Start", "Local Test", "Exit"};
         int result = JOptionPane.showOptionDialog(null, comps, "akka parameters",
@@ -143,10 +145,11 @@ public class Main {
                             "akka.cluster.seed-nodes=[\"akka.tcp://k-core@%s:25515\", " +
                             "\"akka.tcp://k-core@%s:25515\"]\n" +
                             "k-core.graph-file=\"%s\"\n" +
-                            "k-core.part-file=\"%s\"\n",
+                            "k-core.part-file=\"%s\"\n" +
+                            "k-core.coreness-file=\"%s\"\n",
                     roles.getSelectedItem().toString(), ips.getSelectedItem().toString(),
                     ips.getSelectedItem().toString(), seed.getText(),
-                    graphfile.getText(), partfile.getText());
+                    graphfile.getText(), partfile.getText(), corenessfile.getText());
 
         } else if (result == JOptionPane.NO_OPTION) {
             return null;

@@ -45,6 +45,8 @@ public class Worker extends UntypedActor {
 
         } else if (message instanceof NewFrontierEdge) {
             handleNewFrontierEdge((NewFrontierEdge) message);
+        } else if (message instanceof FinalCorenessQuery) {
+            getSender().tell(new FinalCorenessReply(graph.getcorenessTable()), getSelf());
         }
     }
 
