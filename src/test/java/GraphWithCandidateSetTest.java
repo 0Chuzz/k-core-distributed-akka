@@ -120,7 +120,8 @@ public class GraphWithCandidateSetTest {
                 assertTrue(gm.getCoreness(neigh) >= gm.getCoreness(node));
             }
         }
-        */
+
 
     }
+   */
 }
