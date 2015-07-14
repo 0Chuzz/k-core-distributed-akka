@@ -3,7 +3,7 @@ package kcore.structures;
 import java.util.HashSet;
 
 /**
- * Created by chuzz on 4/30/15.
+ * Graph with remote nodes, coreness values and candidate set.
  */
 public class GraphWithCandidateSet extends GraphWithCoreness {
     protected HashSet<Integer> candidateSet;

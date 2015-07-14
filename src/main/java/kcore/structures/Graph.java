@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+/**
+ * Graph implementation, with eedges and nodes.
+ */
 public class Graph implements Serializable {
     protected HashSet<Integer> nodes;
     protected HashMap<Integer, HashSet<Integer>> edges;

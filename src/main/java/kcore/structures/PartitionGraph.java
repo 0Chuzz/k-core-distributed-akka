@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 
 /**
- * Created by chuzz on 6/4/15.
+ * Graph of the partitions. each edge holds the list of frontier edges between two partitions
  */
 class PartitionGraph extends Graph {
     HashMap<Edge, ArrayList<FrontierEdge>> edgesList;

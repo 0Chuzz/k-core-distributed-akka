@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 /**
- * Created by chuzz on 4/29/15.
+ * Graph with remote nodes and coreness values.
  */
 public class GraphWithCoreness extends GraphWithRemoteNodes {
     protected HashMap<Integer, Integer> corenessTable;

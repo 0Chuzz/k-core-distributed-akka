@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 /**
- * Created by chuzz on 5/22/15.
+ * Graph with remote nodes, as is nodes belonging to different partitions.
  */
 public class GraphWithRemoteNodes extends Graph {
     protected HashSet<Integer> remoteNodes;
