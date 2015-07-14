@@ -48,6 +48,12 @@ public class Worker extends UntypedActor {
         }
     }
 
+    /**
+     * Handles the addition of a processed frontier edge. Add a remote node to the graph and
+     * update the coreness of the nodes.
+     *
+     * @param message
+     */
     private void handleNewFrontierEdge(NewFrontierEdge message) {
         final NewFrontierEdge frontierEdge = message;
         int localEdge, remoteEdge, remoteCoreness;
@@ -64,6 +70,10 @@ public class Worker extends UntypedActor {
         graph.updateCorenessFrom(frontierEdge.toBeUpdated);
     }
 
+    /**
+     * Handle query for reachable nodes. builds the subgraph and returns it.
+     * @param message
+     */
     private void handleReachableNodesQuery(ReachableNodesQuery message) {
         final ReachableNodesQuery query = message;
         int node = query.node;
@@ -73,6 +83,11 @@ public class Worker extends UntypedActor {
         getSender().tell(new ReachableNodesReply(reachSub, partitionId, node, coreness), getSelf());
     }
 
+    /**
+     * Handles the request to load the partition data. Loads it from the specified source and
+     * start calculating local coreness values.
+     * @param message
+     */
     private void handleLoadPartition(LoadPartition message) {
         final LoadPartition msg = message;
         partitionId = msg.getPartitionId();
@@ -86,6 +101,10 @@ public class Worker extends UntypedActor {
         getSender().tell(corenessState, getSelf());
     }
 
+    /**
+     * Handles query about node coreness. Gathers required data and returns it.
+     * @param query
+     */
     private void sendCorenessReply(CorenessQuery query) {
         HashMap<Integer, Integer> replymap = new HashMap<Integer, Integer>();
         for (int node : query.node1) {
@@ -97,6 +116,10 @@ public class Worker extends UntypedActor {
     }
 
 
+    /**
+     * pretty print coreness values
+     * @return pretty printed coreness
+     */
     public String corenessToString() {
         StringBuilder b = new StringBuilder();
         b.append("[");
