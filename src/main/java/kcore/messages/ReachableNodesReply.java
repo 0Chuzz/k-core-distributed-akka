@@ -8,8 +8,10 @@ import java.io.Serializable;
  * Reachability information
  */
 public class ReachableNodesReply implements Serializable {
-    public final GraphWithCandidateSet graph;
-    public final int partition, node, coreness;
+    public GraphWithCandidateSet graph;
+    public int partition;
+    public int node;
+    public int coreness;
 
 
     public ReachableNodesReply(GraphWithCandidateSet reachableSubgraph, int partitionId, int node, int coreness) {

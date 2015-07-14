@@ -37,7 +37,7 @@ public class Master extends UntypedActor {
     HashMap<Integer, Integer> nodeToPartition = new HashMap<Integer, Integer>();
     HashMap<Integer, ActorRef> partitionToActor = new HashMap<Integer, ActorRef>();
     FrontierEdgeDatabase frontierEdges = new FrontierEdgeDatabase();
-    HashMap<Integer, FilenameLoadPartition> partitionMsgs;
+    HashMap<Integer, LoadPartition> partitionMsgs;
     int numPartitions, corenessReceived;
 
     @Override
@@ -54,9 +54,9 @@ public class Master extends UntypedActor {
                 conf.getString("k-core.part-file"));
         numPartitions = totalInstances;
         corenessReceived = 0;
-        partitionMsgs = new HashMap<Integer, FilenameLoadPartition>();
+        partitionMsgs = new HashMap<Integer, LoadPartition>();
         for (int i = 0; i < totalInstances; i++) {
-            partitionMsgs.put(i, new FilenameLoadPartition("smallfile" + i, i));
+            partitionMsgs.put(i, new WholeLoadPartition("smallfile" + i, i));
         }
 
     }
@@ -138,7 +138,7 @@ public class Master extends UntypedActor {
         log.debug(message.toString());
 
         if (message.equals("tick")) {
-            for (FilenameLoadPartition msg : partitionMsgs.values()) {
+            for (LoadPartition msg : partitionMsgs.values()) {
                 backend.tell(msg, getSelf());
             }
         } else if (message instanceof CorenessState) {

@@ -81,7 +81,7 @@ public class Worker extends UntypedActor {
         int coreness = graph.getCoreness(node);
         GraphWithCandidateSet reachSub = new GraphWithCandidateSet(graph, node);
 
-        getSender().tell(new ReachableNodesReply(reachSub, partitionId, node, coreness), getSelf());
+        getSender().tell(new WholeReachableNodesReply(reachSub, partitionId, node, coreness), getSelf());
     }
 
     /**
