@@ -1,4 +1,5 @@
 import kcore.structures.GraphWithCandidateSet;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertTrue;
@@ -74,7 +75,8 @@ public class GraphWithCandidateSetTest {
 
     }
 
-    /*
+
+    @Ignore
     @Test
     public void testTest2() {
 
@@ -111,6 +113,7 @@ public class GraphWithCandidateSetTest {
         GraphWithCandidateSet gm = new GraphWithCandidateSet();
         gm.merge(new GraphWithCandidateSet(g1, 2));
         gm.merge(new GraphWithCandidateSet(g2, 4));
+        gm.merge(new GraphWithCandidateSet(g1, 1));
         assertTrue("some candidate node", gm.getCandidateSet().size() > 0);
         assertTrue("some to be updated", gm.getPrunedSet().size() > 0);
 
@@ -123,5 +126,5 @@ public class GraphWithCandidateSetTest {
 
 
     }
-   */
+
 }

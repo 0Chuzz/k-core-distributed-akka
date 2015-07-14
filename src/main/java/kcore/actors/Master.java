@@ -129,7 +129,6 @@ public class Master extends UntypedActor {
                 e.printStackTrace();
             }
         }
-        log.info("testtest {}", partitions.size());
         return partitions.size();
     }
 
