@@ -46,7 +46,11 @@ public class Worker extends UntypedActor {
         } else if (message instanceof NewFrontierEdge) {
             handleNewFrontierEdge((NewFrontierEdge) message);
         } else if (message instanceof FinalCorenessQuery) {
-            getSender().tell(new FinalCorenessReply(graph.getcorenessTable()), getSelf());
+            HashMap<Integer, Integer> table = new HashMap<Integer, Integer>(graph.getcorenessTable());
+            for (int rnode : graph.getRemoteNodes()) {
+                table.remove(rnode);
+            }
+            getSender().tell(new FinalCorenessReply(table), getSelf());
         }
     }
 

@@ -237,7 +237,7 @@ public class Master extends UntypedActor {
         Config conf = getContext().system().settings().config();
         FileWriter writer = new FileWriter(conf.getString("k-core.coreness-file"), true);
         for (Map.Entry<Integer, Integer> entry : corenessTable.entrySet()) {
-            writer.write("" + entry.getKey() + " " + entry.getValue() + "\n");
+            writer.write("Node ID:" + entry.getKey() + " coreness:" + entry.getValue() + "\n");
         }
         writer.close();
     }
