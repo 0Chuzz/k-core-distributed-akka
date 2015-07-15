@@ -132,9 +132,11 @@ public class Main {
         JTextField graphfile = new JTextField("graphfile");
         JTextField partfile = new JTextField("partfile");
         JTextField corenessfile = new JTextField("corenessfile");
-        final JComponent[] comps = {roles, ips, seed, graphfile, partfile, corenessfile};
+        JLabel expl1 = new JLabel("Press 'start node' to start a new cluster node with the above parameters.");
+        JLabel expl2 = new JLabel("Press 'start example' to start a two node example cluster.");
+        final JComponent[] comps = {roles, ips, seed, graphfile, partfile, corenessfile, expl1, expl2};
         JOptionPane jp = new JOptionPane(comps);
-        Object[] buttons = {"Start", "Local Test", "Exit"};
+        Object[] buttons = {"Start node", "Start example", "Exit"};
         int result = JOptionPane.showOptionDialog(null, comps, "akka parameters",
                 JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE,
                 null, buttons, buttons[0]);
