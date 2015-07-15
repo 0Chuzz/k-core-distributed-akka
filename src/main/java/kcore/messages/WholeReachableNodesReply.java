@@ -7,7 +7,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * Created by chuzz on 7/14/15.
+ * Compressed message containing the whole reachable subgraph
  */
 public class WholeReachableNodesReply extends ReachableNodesReply implements Serializable {
     public WholeReachableNodesReply(GraphWithCandidateSet reachableSubgraph, int partitionId, int node, int coreness) {

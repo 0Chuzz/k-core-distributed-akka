@@ -6,7 +6,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * Created by chuzz on 7/14/15.
+ * Compressed message containing the final partition table.
  */
 public class FinalCorenessReply implements Serializable {
     public HashMap<Integer, Integer> table;

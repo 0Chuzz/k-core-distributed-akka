@@ -228,7 +228,10 @@ public class Master extends UntypedActor {
     }
 
     /**
-     * Write result into file
+     * Write result into output file
+     *
+     * @param corenessTable coreness table from partition
+     * @throws IOException
      */
     private void writeResult(HashMap<Integer, Integer> corenessTable) throws IOException {
         Config conf = getContext().system().settings().config();
